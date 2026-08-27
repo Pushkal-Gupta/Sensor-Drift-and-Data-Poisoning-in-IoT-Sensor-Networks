@@ -21,6 +21,23 @@ patent material (`../docs/`). This directory is the hardware tier.
 Wi-Fi and MQTT are optional. With no broker the node still runs and prints
 everything to the serial monitor; only the publishing is skipped.
 
+There is deliberately no `wokwi.toml`. That file configures the Wokwi CLI and
+VS Code extension, which simulate a **pre-compiled** binary and ignore the web
+IDE flow above. Making it work would need `arduino-cli`, plus the sketch moved
+into a folder named after itself (Arduino requires the main `.ino` to match its
+parent directory, and this one lives in `hardware/`). If you ever want that
+route:
+
+```bash
+arduino-cli core install esp32:esp32
+arduino-cli compile --fqbn esp32:esp32:esp32doit-devkit-v1 --output-dir build .
+```
+
+then point `firmware` at `build/sketch.ino.bin` and `elf` at
+`build/sketch.ino.elf`. Until someone needs CI builds, the web IDE is the
+supported path and a config pointing at binaries that do not exist is worse
+than none.
+
 ## Verify it without hardware
 
 ```bash
