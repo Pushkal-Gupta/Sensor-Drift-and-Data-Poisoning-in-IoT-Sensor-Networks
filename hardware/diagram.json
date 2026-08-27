@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "author": "Shridhar M (23BCT0201), Vanka Kaushik, Pushkal Gupta - PIRCAD edge node",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+
+    { "type": "wokwi-dht22", "id": "dht", "top": 60, "left": -200,
+      "attrs": { "temperature": "24.0", "humidity": "45" } },
+    { "type": "wokwi-resistor", "id": "rPullup", "top": 10, "left": -150,
+      "rotate": 90, "attrs": { "value": "10000" } },
+
+    { "type": "wokwi-led", "id": "ledClean", "top": -60, "left": 220,
+      "attrs": { "color": "green", "label": "CLEAN / forwarding" } },
+    { "type": "wokwi-led", "id": "ledDrift", "top": 10, "left": 220,
+      "attrs": { "color": "yellow", "label": "DRIFT / recalibrating" } },
+    { "type": "wokwi-led", "id": "ledPoison", "top": 80, "left": 220,
+      "attrs": { "color": "red", "label": "POISON / quarantined" } },
+
+    { "type": "wokwi-resistor", "id": "rClean", "top": -50, "left": 140,
+      "attrs": { "value": "220" } },
+    { "type": "wokwi-resistor", "id": "rDrift", "top": 20, "left": 140,
+      "attrs": { "value": "220" } },
+    { "type": "wokwi-resistor", "id": "rPoison", "top": 90, "left": 140,
+      "attrs": { "value": "220" } },
+
+    { "type": "wokwi-text", "id": "lblSensor", "top": -50, "left": -215,
+      "attrs": { "text": "DHT22  -  temperature + humidity, 10k pull-up on data" } },
+    { "type": "wokwi-text", "id": "lblLeds", "top": -110, "left": 140,
+      "attrs": { "text": "differential response" } }
+  ],
+  "connections": [
+    [ "esp:TX0", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX0", "$serialMonitor:TX", "", [] ],
+
+    [ "dht:VCC", "esp:3V3",   "red",   [ "v-30", "h60", "*", "h-20" ] ],
+    [ "dht:GND", "esp:GND.1", "black", [ "v30",  "h140", "*", "h-20" ] ],
+    [ "dht:SDA", "esp:D4",    "green", [ "v20",  "h120", "*", "h-20" ] ],
+    [ "rPullup:1", "dht:SDA", "green", [ "v0", "*", "v-10" ] ],
+    [ "rPullup:2", "dht:VCC", "red",   [ "v0", "*", "v-10" ] ],
+
+    [ "esp:D25", "rClean:1",  "green",  [ "v-20", "h40" ] ],
+    [ "rClean:2", "ledClean:A", "green", [ "h10" ] ],
+    [ "ledClean:C", "esp:GND.2", "black", [ "v40", "h-120" ] ],
+
+    [ "esp:D26", "rDrift:1",  "gold",   [ "v0", "h40" ] ],
+    [ "rDrift:2", "ledDrift:A", "gold",  [ "h10" ] ],
+    [ "ledDrift:C", "esp:GND.2", "black", [ "v40", "h-120" ] ],
+
+    [ "esp:D27", "rPoison:1", "red",    [ "v20", "h40" ] ],
+    [ "rPoison:2", "ledPoison:A", "red", [ "h10" ] ],
+    [ "ledPoison:C", "esp:GND.2", "black", [ "v40", "h-120" ] ]
+  ],
+  "dependencies": {}
+}
