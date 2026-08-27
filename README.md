@@ -1,132 +1,55 @@
-# Sensor Drift and Data Poisoning in IoT Sensor Networks
+# PIRRD Edge Node — Wokwi simulation (Assessment-4)
 
-Two generations of the same line of work.
+ESP32 DevKit V1 + DHT22 node from Section 5 of the proposal. Samples the sensor,
+injects labelled drift / poisoning into the reported value, and publishes over
+MQTT to the fog process. Serial monitor is the UI (no OLED/LEDs, per Section 5.3).
 
-**Generation 1 — FHAD** (`fog_node.py`, `hybrid_detector.py`, `evaluate_*.py`,
-`random_forest_model.py`, `anomaly_injector.py`, `dataset_loader.py`): the
-fog-based hybrid anomaly detector described in the original IDF — rolling-mean
-detrending, CUSUM, and a windowed classifier activated only on flagged windows.
-Left untouched.
+## Run
+1. <https://wokwi.com/projects/new/esp32> → replace the sketch with `sketch.ino`.
+2. Replace `diagram.json` with this one (board type is `wokwi-esp32-devkit-v1`).
+3. Add a `libraries.txt` tab with the two lines from this repo.
+4. ▶ — Wi-Fi joins `Wokwi-GUEST`, MQTT connects to `broker.hivemq.com:1883`.
 
-**Generation 2 — PIRCAD** (`pircad/`, `experiments/`, `tests/`, `docs/`):
-physics-informed fog-layer **root-cause disambiguation** of sensor drift and data
-poisoning, with **differential response** and **adaptation inhibition**.
+## Wiring
+| DHT22 pin | ESP32 DevKit V1 pin |
+|---|---|
+| VCC | `3V3` |
+| GND | `GND.1` |
+| SDA (data) | `D4` (GPIO4), with 10 kΩ pull-up to VCC |
+| NC | — |
 
-Start with `docs/PATENT_PACKAGE.md` for the filing material,
-`docs/ARCHITECTURE.md` for the engineering description, and
-`docs/IDF_B_GEN2.md` for a disclosure form in the same structure as the original.
+DevKit V1 uses `D`-prefixed pin names in diagram.json (`D4`, `3V3`, `GND.1`,
+`TX0`/`RX0`) — this differs from the DevKit-C v4 board.
 
----
-
-## Why there is a Generation 2
-
-The patentability search report (docket KM27250) found all five extracted
-features of the Gen-1 disclosure — fog anomaly-detection architecture,
-multi-stage hybrid framework, conditional ML activation, window preprocessing,
-selective forwarding — disclosed across prior art D1–D4, and concluded the
-invention "represents an obvious aggregation of known elements".
-
-The report is right about the claimed feature set. The deeper problem is that the
-Gen-1 title promises detection of *sensor drift **and** data poisoning*, but
-nothing in the Gen-1 pipeline distinguishes them, and the system does the same
-thing — discard — either way. Generation 2 makes the distinction the invention:
-
-* it compares measurements against what the **physical process** says they should
-  be, rather than against their own recent history;
-* it decides **why** a deviation occurred — benign transducer drift, adversarial
-  injection, or a genuine process excursion;
-* it acts **differently** on each, and in particular it keeps poisoned data out of
-  every adaptive element in the system.
-
-## Quick start
-
-```bash
-python tests/test_pircad.py                       # 17 unit tests, ~2 min
-python experiments/exp1_root_cause_benchmark.py   # the headline comparison
-python experiments/run_all.py                     # full evidence suite
-python experiments/run_all.py --quantum           # plus the quantum-kernel backend
-```
-
-Requires numpy, pandas, scikit-learn, matplotlib, joblib. Models are cached in
-`artifacts/models.joblib` after the first run (fitting takes several minutes);
-delete it to refit. The full suite takes roughly an hour on a laptop — most of it
-is `exp3_ablation.py`, which refits and re-evaluates six configurations.
-
-Results land in `artifacts/*.json`, figures in `figures/*.png`.
-
-## Layout
-
-```
-pircad/
-  simulator.py    experimental plant, transducers, attack models (evidence only)
-  twin.py         E1  expected-response generation (dedicated-observer scheme)
-  residual.py     E2  residual generation + character features
-  triggers.py     E3  lightweight statistical trigger on the residual
-  consistency.py  E4  cross-sensor physical-consistency localisation
-  rootcause.py    E5  root-cause disambiguation + confidence
-  escalation.py   E6  confidence-gated escalation
-  quantum.py          optional gate-model quantum-kernel backend
-  governor.py     E7  adaptation / retraining inhibition
-  actions.py      E8  differential response + bounded recalibration
-  fognode.py          the assembled system
-  baselines.py        Gen-1 FHAD, and an adaptive-recalibrating comparison system
-  metrics.py          evaluation suite
-  training.py         corpus collection and model fitting
-
-experiments/
-  exp1_root_cause_benchmark.py   Gen-1 vs Gen-2 across six scenarios
-  exp2_poisoned_adaptation.py    the technical effect: absorption and blindness
-  exp3_ablation.py               what each claimed element is worth
-  exp4_escalation.py             confidence gate + heavy/quantum backends
-  exp5_legacy_dataset.py         the original single-channel record
-  make_figures.py                figures for the disclosure
-
-tests/
-  test_pircad.py                 one test per claimed element
-
-docs/
-  ARCHITECTURE.md      engineering description
-  PATENT_PACKAGE.md    title, abstract, claims, claim→code→evidence mapping
-  IDF_B_GEN2.md        disclosure form, same structure as the Gen-1 IDF
-```
-
-## Headline result
-
-Six scenarios, four held-out seeds, training and evaluation seeds disjoint.
-Generation 1 is re-implemented faithfully and given the same training episodes and
-the same four labels, so the gap is architectural.
-
-| | PIRCAD (Gen 2) | FHAD (Gen 1) |
+## MQTT topics
+| Topic | Content | Consumer |
 |---|---|---|
-| root-cause accuracy | **0.963** | 0.540 |
-| rate-matched injection vs benign drift | **0.992** | 0.298 |
-| genuine process event correctly identified | 0.982 | 0.000 |
-| poisoning contained (not forwarded) | 0.959 | 0.245 |
-| injection misclassified as drift | **0.000** | 0.000 |
+| `pirrd/node1/data` | `{node,seq,ms,temp,hum}` — the *reported* value only | fog process (blind) |
+| `pirrd/node1/truth` | `{seq,mode,gt,offset,temp_clean}` — ground truth | fog scorer |
+| `pirrd/node1/edge` | `{seq,residual,rmax,cusum,verdict,frozen}` — edge preview | optional |
+| `pirrd/node1/cmd` | single char: `c d e s p t a r` | remote injection control |
 
-## The one experiment to look at
+Truth is deliberately on a separate topic so the fog pipeline never sees labels.
 
-`exp2_poisoned_adaptation.py`. A false-data injection biases a temperature
-channel slowly downwards at a rate inside the transducer's ageing envelope. A
-system that equates "slow and persistent" with "drift" recalibrates — adopting the
-attacker's bias as its new zero. The attacker then withdraws and a genuine
-over-temperature fault occurs, against a cloud-side safety threshold applied to
-whatever the fog layer forwards.
+## Injection modes
+| Key | Mode | Ground truth | Shape |
+|---|---|---|---|
+| c | CLEAN | CLEAN | none |
+| d | DRIFT_LIN | DRIFT | +0.02 °C/sample linear ramp |
+| e | DRIFT_EXP | DRIFT | exponential ramp, capped +3 °C |
+| s | POISON_STEP | POISON | +6 °C held |
+| p | POISON_SPIKE | POISON | +9 °C every 6th sample |
+| t | POISON_STEALTH | POISON | +0.045 °C/sample — drift-shaped, exceeds sensor bound |
+| a | AUTO | — | cycles all modes, 40 s each (default) |
 
-The comparison system absorbs the bias and under-reports the real fault. PIRCAD
-classifies the ramp as poisoning rather than drift, quarantines it, and freezes
-every adaptive element, so its reference is intact when the real fault arrives.
+## Fog-side quick listener
+```python
+import paho.mqtt.client as mqtt, json
+def on_msg(c, u, m): print(m.topic, json.loads(m.payload))
+c = mqtt.Client(); c.on_message = on_msg
+c.connect("broker.hivemq.com", 1883); c.subscribe("pirrd/node1/#"); c.loop_forever()
+```
 
-The middle column of that experiment is the control: same detector, same
-residuals, same classifier, only the response made non-differential. It isolates
-the contribution of acting on the cause from the contribution of detecting better.
-
-## Scope, stated plainly
-
-The strong separation of rate-matched drift from rate-matched injection needs
-**physical redundancy** — several instruments whose readings are constrained by
-known physics. `exp5_legacy_dataset.py` runs the same architecture on the original
-single-channel temperature record, where that redundancy is absent; it works, but
-less well, and instrument-versus-process separation is unavailable entirely. The
-modelling assumptions behind the headline numbers are listed in
-`docs/ARCHITECTURE.md` §4.
+Change the DHT22 value in Wokwi (click the sensor) to produce a *legitimate*
+transient — the edge preview should stay CLEAN because the physics model
+absorbs it, which is the residual-domain advantage of Section 4.1.

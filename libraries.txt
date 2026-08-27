@@ -1,0 +1,3 @@
+# Auto-installed by Wokwi
+DHT sensor library for ESPx
+PubSubClient
