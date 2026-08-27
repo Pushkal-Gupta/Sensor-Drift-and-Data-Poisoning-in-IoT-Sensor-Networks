@@ -7,3 +7,8 @@ venv/
 #   python experiments/run_all.py
 artifacts/
 figures/
+
+# hardware build outputs
+hardware/test_edge
+hardware/ci/compile_check
+hardware/ci/edge_runs.csv

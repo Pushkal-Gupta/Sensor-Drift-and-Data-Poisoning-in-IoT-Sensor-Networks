@@ -1,0 +1,4 @@
+# Wokwi installs these automatically from the library index.
+# DHTesp (temperature + humidity), PubSubClient (MQTT).
+DHT sensor library for ESPx
+PubSubClient
