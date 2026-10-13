@@ -18,3 +18,7 @@ joblib>=1.3
 # Optional: only needed for `fog_bridge.py --host`, the live MQTT listener.
 # The offline `--replay` path does not use it.
 # paho-mqtt>=1.6
+
+# Journal evaluation (experiments 6-13) and manuscript build.
+torch>=2.2          # multi-scale 1D-CNN and autoencoder baselines
+python-docx>=1.1    # paper/build_manuscript.py

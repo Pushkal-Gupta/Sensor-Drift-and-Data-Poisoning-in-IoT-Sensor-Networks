@@ -20,6 +20,8 @@ Three tiers, one architecture:
 | `docs/PATENT_PACKAGE.md` | title, abstract, claims, prior-art delta, filing caveats |
 | `docs/IDF_B_GEN2.md` | disclosure form in the same structure as the Generation-1 IDF |
 | `hardware/README.md` | running the node in Wokwi |
+| `paper/REVISION_NOTES.md` | the journal version: what changed, defects found, how to reproduce |
+| `paper/PIRCAD_MLWA_manuscript.docx` | the manuscript, generated from the experiment artifacts |
 
 ## Why there is a Generation 2
 
@@ -61,7 +63,38 @@ cd hardware && ./run_checks.sh
 Fog side needs numpy, pandas, scikit-learn, matplotlib, joblib. Hardware side
 needs g++ and python3; `fog_bridge.py --host` additionally needs paho-mqtt.
 
-## Headline results
+### Journal evaluation (experiments 6–13)
+
+```bash
+pip install -r requirements.txt torch python-docx
+python experiments/run_all_v2.py          # fits models, runs exps 6-13, draws figures
+python paper/build_manuscript.py          # regenerates the manuscript from artifacts/
+python tests/test_v2.py                   # tests for the journal additions
+```
+
+| Script | Question |
+|---|---|
+| `exp6_statistical_benchmark.py` | 180 held-out episodes (30 seeds); PIRCAD with five classifier back-ends vs. a 1D-CNN, a generic-feature RF, Gen-1, and four unsupervised detectors; bootstrap CIs and Holm-corrected Wilcoxon tests |
+| `exp7_adaptive_attacker.py` | how much must the attacker know? Sweep from a stale surrogate to an exact-state, on-path, and coordinated attacker |
+| `exp8_distribution_shift.py` | eleven shifts (model mismatch, plant, noise, ambient, setpoint, rates) with no retraining |
+| `exp9_adaptation_poisoning.py` | attack-then-fault, 120 episodes: does the downstream safety alarm survive? Compared with tuned Kalman, Page-Hinkley and EWMA self-calibration, plus a benign-drift arm |
+| `exp10_intel_lab.py` | real data: Intel Berkeley Lab motes, semi-synthetic injections, mote-disjoint train/test |
+| `exp11_ablation.py` | ablation at 30 seeds, including the dedicated observers and the adaptation governor |
+| `exp12_hybrid_features.py` | physics features plus generic features in one learner |
+| `exp13_intel_shift.py` | the noise-shift test, repeated on real data |
+
+New modules: `pircad/scenarios.py` (attacker and shift knobs), `pircad/indoor.py`
+(real-data twin and constraints), `pircad/baselines_ml.py`,
+`pircad/baselines_adaptive.py`, `pircad/fastforest.py`.
+
+## Headline results (original 4-seed evaluation — superseded)
+
+> The table below compares PIRCAD only with the authors' own Generation-1
+> pipeline. The journal evaluation (experiments 6–13, `paper/REVISION_NOTES.md`)
+> adds strong data-driven baselines. **In distribution, a supervised 1D-CNN and a
+> generic-feature random forest are as accurate as PIRCAD.** PIRCAD's advantage is
+> robustness under distribution shift and what it *does* with a verdict. Read the
+> journal results, not this table.
 
 **Fog pipeline** — six scenarios, four held-out seeds, training and evaluation
 seeds disjoint. Generation 1 is re-implemented faithfully and given the same

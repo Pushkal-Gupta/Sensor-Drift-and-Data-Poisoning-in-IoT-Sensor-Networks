@@ -48,13 +48,19 @@ class ChannelGovernance:
     quarantined_samples: int = 0
     poison_episodes: int = 0
     operator_ack: bool = False
+    drift_run: int = 0          # consecutive drift verdicts while quarantined
     held: Deque[tuple] = field(default_factory=lambda: deque(maxlen=5000))
 
 
 class AdaptationGovernor:
     def __init__(self, channels, freeze_hold: int = 400,
-                 clean_to_resume: int = 200, require_operator_ack: bool = False):
+                 clean_to_resume: int = 200, require_operator_ack: bool = False,
+                 allow_reattribution: bool = False):
         self.freeze_hold = freeze_hold
+        #: policy: may sustained drift evidence move a quarantined channel to
+        #: DRIFTING (availability), or is quarantine latched until the channel
+        #: comes back clean (security)?  See the trade-off in experiment 9.
+        self.allow_reattribution = allow_reattribution
         self.clean_to_resume = clean_to_resume
         self.require_operator_ack = require_operator_ack
         self.ch: Dict[str, ChannelGovernance] = {
@@ -135,14 +141,35 @@ class AdaptationGovernor:
             g.state = ChannelState.QUARANTINED
             g.frozen_since = k if g.frozen_since is None else g.frozen_since
             g.clean_run = 0
+            g.drift_run = 0
             return
 
         if cause is RootCause.SENSOR_DRIFT:
             if g.state in (ChannelState.QUARANTINED, ChannelState.RECOVERING):
-                # a quarantined channel is not released by a drift verdict
+                # A single drift verdict does not release a quarantined channel:
+                # an attacker must not be able to buy recalibration by steering
+                # one verdict.  But a quarantine must not be a life sentence
+                # either -- one transient misread at the onset of genuine drift
+                # would otherwise lock a serviceable sensor out of correction
+                # for good.  Re-attribution therefore needs the freeze hold
+                # served AND a sustained run of consecutive drift verdicts; the
+                # correction it then unlocks is still bounded and audited.
+                g.drift_run += 1
+                if not self.allow_reattribution:
+                    return
+                served = (g.frozen_since is not None
+                          and (k - g.frozen_since) >= self.freeze_hold)
+                if (served and g.drift_run >= self.clean_to_resume
+                        and not (self.require_operator_ack and not g.operator_ack)):
+                    g.state = ChannelState.DRIFTING
+                    g.frozen_since = None
+                    g.drift_run = 0
+                    self.log.append(f"[{k}] {channel}: re-attributed to DRIFT after "
+                                    f"sustained drift evidence")
                 return
             g.state = ChannelState.DRIFTING
             return
+        g.drift_run = 0
 
         # NORMAL / PROCESS_EVENT / UNKNOWN
         if g.state is ChannelState.QUARANTINED:
