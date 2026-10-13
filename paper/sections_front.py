@@ -8,11 +8,11 @@ HERE = Path(__file__).resolve().parent
 
 TITLE = ("Drift or Deception? Physics-Anchored Root-Cause Learning for "
          "Poisoning-Resilient Self-Calibration in IoT Sensor Networks")
-AUTHORS = ("Pushkal Gupta^{a,*}, Shridhar M^{a}, Vanka Kaushik^{a}, "
-           "Syamasudha Veeragandham^{a}")
+AUTHORS = ("Pushkal Gupta^{a}, Shridhar M^{a}, Vanka Kaushik^{a}, "
+           "Syamasudha Veeragandham^{a,*}")
 AFFIL = ("^{a} School of Computer Science and Engineering, Vellore Institute of "
          "Technology, Vellore, Tamil Nadu 632014, India")
-CORR = ("^{*} Corresponding author: Pushkal Gupta. E-mail addresses: pushkalgupta2005@gmail.com "
+CORR = ("^{*} Corresponding author: Syamasudha Veeragandham. E-mail addresses: pushkalgupta2005@gmail.com "
         "(P. Gupta), shridhar.m2023@vitstudent.ac.in (S. M), "
         "vanka.kaushik2023@vitstudent.ac.in (V. Kaushik), syamasudha.v@vit.ac.in "
         "(S. Veeragandham).")
