@@ -103,7 +103,8 @@ class Episode:
 # plant + transducers
 # --------------------------------------------------------------------------
 def simulate_plant(n: int, p: PlantParams, rng: np.random.Generator,
-                   stuck_heater_from: Optional[int] = None
+                   stuck_heater_from: Optional[int] = None,
+                   stuck_value: float = 1.0
                    ) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
     """Integrate the plant.  Returns (truth channels, actuation channels)."""
     t = np.arange(n, dtype=float) * p.dt
@@ -127,8 +128,9 @@ def simulate_plant(n: int, p: PlantParams, rng: np.random.Generator,
         # A genuine process fault: the contactor welds shut.  The command keeps
         # cycling normally, the physical heater does not.  All four sensors stay
         # mutually consistent -- only the plant has moved.
-        u_phys[k] = 1.0 if (stuck_heater_from is not None
-                            and k >= stuck_heater_from) else u_cmd[k]
+        # stuck_value 1.0 = welded on (overheat), 0.0 = failed open (cooling)
+        u_phys[k] = stuck_value if (stuck_heater_from is not None
+                                    and k >= stuck_heater_from) else u_cmd[k]
         T_in[k] = T
         dT = (p.Q * u_phys[k] - p.k_loss * (T - T_amb[k])) / p.C
         T = T + dT * p.dt
