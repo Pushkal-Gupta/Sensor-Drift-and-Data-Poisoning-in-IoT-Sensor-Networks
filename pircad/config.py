@@ -115,6 +115,11 @@ class FogConfig:
     freeze_hold: int = 400               # samples of enforced freeze after poison
     clean_to_resume: int = 200           # consecutive clean samples before resume
     require_operator_ack: bool = False    # if True, freeze persists until ack()
+    #: may sustained drift evidence re-attribute a quarantined channel to drift
+    #: (True: availability) or does quarantine latch until the channel comes back
+    #: clean (False: security)?  Latched is the default: in experiment 9 it had
+    #: the same drift-correction error and far fewer spurious safety trips.
+    allow_reattribution: bool = False
 
     #: Ablation switch.  With differential_response = False every detected
     #: deviation is answered the same way -- recalibrate and keep adapting --

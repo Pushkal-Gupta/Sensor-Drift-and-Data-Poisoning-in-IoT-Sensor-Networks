@@ -12,3 +12,6 @@ figures/
 hardware/test_edge
 hardware/ci/compile_check
 hardware/ci/edge_runs.csv
+
+# third-party datasets, fetched by pircad/indoor.py::download()
+data/external/

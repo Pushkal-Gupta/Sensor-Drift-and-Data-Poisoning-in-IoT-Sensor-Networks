@@ -123,7 +123,8 @@ class PIRCADFogNode:
         self.trig = TriggerBank(self.channels, self.cfg.trigger)
         self.gov = AdaptationGovernor(self.channels, self.cfg.freeze_hold,
                                       self.cfg.clean_to_resume,
-                                      self.cfg.require_operator_ack)
+                                      self.cfg.require_operator_ack,
+                                      self.cfg.allow_reattribution)
         self.cal = CalibrationManager(self.channels, self.cfg)
         self.ctrl = DifferentialResponseController(self.cfg)
         self.esc = escalation or EscalationService(backend=None)
@@ -283,6 +284,18 @@ class PIRCADFogNode:
                 self._last_class.pop(c, None)
                 cause, conf = _state_cause(gstate)
 
+            # Containment follows the governor, not the latest verdict.  A drift
+            # verdict on a channel that is still quarantined is evidence toward
+            # re-attribution (see AdaptationGovernor.note_decision), not a
+            # licence to forward: until the governor releases the channel it is
+            # treated, and reported, as poisoned.
+            if (engaged and cause is RootCause.SENSOR_DRIFT
+                    and gstate in (ChannelState.QUARANTINED, ChannelState.RECOVERING)):
+                verdict_for_governor = cause
+                cause, conf = RootCause.DATA_POISONING, max(conf, 0.90)
+            else:
+                verdict_for_governor = None
+
             # ablation: collapse every cause onto the prior-art response
             acted = cause
             if not self.cfg.differential_response and cause is not RootCause.NORMAL:
@@ -291,23 +304,37 @@ class PIRCADFogNode:
 
             # ---- escalation (E6) -----------------------------------------
             escalated = False
+            unresolved = False
             if plan.action is Action.ESCALATE and self.esc.available and feats is not None:
                 ticket = self.esc.submit(k, c, build_vector(c, feats, loc), cause, conf)
                 if ticket is not None:
                     pending_index[ticket.id] = (k, c)
                     escalated = True
                 else:
-                    plan = self.ctrl.plan(k, c, cause, max(conf, 0.999))
+                    unresolved = True
             elif plan.action is Action.ESCALATE and not self.esc.available:
-                # no backend: fall back to the conservative local verdict
-                plan = self.ctrl.plan(k, c, cause, max(conf, 0.999))
+                unresolved = True
+            if unresolved:
+                # No advanced verdict is coming.  An uncertain POISON verdict
+                # keeps this sample held (not forwarded, no adaptation, no
+                # calibration) but must not latch a quarantine: that is an
+                # irreversible action taken on a guess, and on real data it
+                # turned a handful of 0.3-confidence verdicts into
+                # quarantining a drifting sensor for most of its life.  Other
+                # uncertain verdicts act locally, since their actions are
+                # bounded and reversible.
+                if acted is RootCause.DATA_POISONING:
+                    verdict_for_governor = RootCause.UNKNOWN
+                else:
+                    plan = self.ctrl.plan(k, c, acted, max(conf, 0.999))
 
             # ---- E7: governance ------------------------------------------
             # Only a *fresh* verdict advances the state machine; the standing
             # classification reported above must not re-arm the state that
             # produced it, or a channel could never age back to trusted.
             self.gov.note_decision(k, c,
-                                   acted if engaged else RootCause.NORMAL,
+                                   (verdict_for_governor or acted) if engaged
+                                   else RootCause.NORMAL,
                                    conf if engaged else 1.0,
                                    triggered=st.fired,
                                    compensating=compensating)
