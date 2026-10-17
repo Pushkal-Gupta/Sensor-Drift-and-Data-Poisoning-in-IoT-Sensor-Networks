@@ -53,6 +53,12 @@ def pfmt(p: float) -> str:
     return f"{p:.3f}"
 
 
+def pstr(p: float) -> str:
+    """p-value for running text: 'p < 10−4' or 'p = 0.54'."""
+    s = pfmt(p) if p < 0.001 else f"{p:.2f}"
+    return f"p {s[0]} {s[1:]}" if s.startswith("<") else f"p = {s}"
+
+
 SYS6 = ["PIRCAD-rf", "PIRCAD-hgb", "PIRCAD-mlp", "PIRCAD-logreg", "PIRCAD-rules",
         "Multi-scale 1D-CNN", "Generic-feature RF", "Gen-1 FHAD"]
 SYS6_LABEL = {"PIRCAD-rf": "PIRCAD (random forest)", "PIRCAD-hgb": "PIRCAD (gradient boosting)",
@@ -90,7 +96,7 @@ def detection_table(d) -> List[List[str]]:
         sm = d["summary"][s]
         rows.append([SYS6_LABEL.get(s, s), f(sm["detection_f1"]), "–", f(sm["false_alarm_rate"])])
     for name, sm in d["detection_summary"].items():
-        rows.append([name, f(sm["detection_f1"]), f(sm["detection_recall"]),
+        rows.append([name.replace("chi-square", "χ²"), f(sm["detection_f1"]), f(sm["detection_recall"]),
                      f(sm["false_alarm_rate"])])
     return rows
 
@@ -184,7 +190,7 @@ def ablation_table(d) -> List[List[str]]:
     rows = []
     for r, sm in S.items():
         p = "ref." if r == "full" else pfmt(T[r]["p_holm"])
-        rows.append(["Full system" if r == "full" else r, fci(sm["macro_f1"]),
+        rows.append(["Full system" if r == "full" else r.replace("- ", "− ", 1), fci(sm["macro_f1"]),
                      f(sm["false_drift_rate"]), f(sm["poison_containment"]),
                      f(sm["process_masking_rate"]), f(sm["retraining_protection"]),
                      f(sm["harm"], 2), p])
