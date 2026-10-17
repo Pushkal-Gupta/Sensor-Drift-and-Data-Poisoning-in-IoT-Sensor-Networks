@@ -57,11 +57,6 @@ class Manuscript:
             h.font.color.rgb = RGBColor(0, 0, 0)
             h.paragraph_format.space_before = Pt(12)
             h.paragraph_format.space_after = Pt(6)
-        # line numbers help reviewers; Elsevier asks for them at submission
-        sp = sec._sectPr
-        ln = OxmlElement("w:lnNumType")
-        ln.set(qn("w:countBy"), "1"); ln.set(qn("w:restart"), "continuous")
-        sp.append(ln)
 
     # -------------------------------------------------------------- citations
     def _resolve(self, text: str) -> str:

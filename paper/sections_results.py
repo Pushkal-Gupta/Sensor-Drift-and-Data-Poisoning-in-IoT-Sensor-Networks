@@ -42,6 +42,23 @@ def _v(x, nd=3):
     return f"{x:.{nd}f}"
 
 
+SHORT = {"PIRCAD-rf": "PIRCAD", "Multi-scale 1D-CNN": "the CNN",
+         "Generic-feature RF": "the generic-feature forest"}
+
+
+def _shift_label(c):
+    """Experiment-8 condition key -> label for running text ('sensor noise ×3')."""
+    s = T.SHIFT_LABEL.get(c, c)
+    return s[0].lower() + s[1:]
+
+
+def _noise(level):
+    """Experiment-13 level key -> table label."""
+    if level == "original":
+        return "No added noise"
+    return "Noise " + level.removeprefix("noise ").replace(" C /", " °C /")
+
+
 # --------------------------------------------------------------------------
 def highlights(R):
     w = R["worst8"]
@@ -107,7 +124,7 @@ def results_section(m, R):
          "Process masked ↓", "False alarm ↓", "p"],
         T.bench_table(e6), widths=[3.6, 2.6, 2.6, 1.3, 1.3, 1.3, 1.3, 1.4], font=8)
     tw = e6["tests"]["macro_f1"]
-    m.p(f"Table {t_bench} answers the first question a reviewer should ask: is a "
+    m.p(f"Table {t_bench} addresses the first question: is a "
         "physics-anchored learner more accurate than a strong data-driven one when "
         "train and test come from the same distribution? It is not. PIRCAD reaches "
         f"macro-F1 {_v(R['mf1']['PIRCAD-rf'])} with a random forest and "
@@ -117,9 +134,9 @@ def results_section(m, R):
         f"generic-feature forest {_v(R['mf1']['Generic-feature RF'])}, significantly "
         "higher. Both learned baselines see every raw channel and the actuator command, "
         "so in distribution they can learn the coupling the physics encodes. The "
-        "authors' earlier pipeline (Gen-1), the only comparison in the original "
-        f"version of this work, reaches {_v(R['mf1']['Gen-1 FHAD'])}: comparing against "
-        "it alone overstated the contribution.")
+        "authors' earlier pipeline (Gen-1), against which our prototype was "
+        f"originally compared, reaches {_v(R['mf1']['Gen-1 FHAD'])}: a comparison "
+        "against it alone would overstate the contribution.")
     m.p("Three properties of PIRCAD's errors matter more than its mean. The two "
         "operationally dangerous confusions are near zero: poisoning read as drift "
         f"({_v(S['PIRCAD-rf']['false_drift_rate']['mean'])}) and drift read as "
@@ -269,9 +286,9 @@ def _shift(m, R):
         "a shift that changes nothing about the causes, only the operating point the "
         "network memorised.")
     m.p("PIRCAD degrades but does not collapse: its worst condition is "
-        f"{w['PIRCAD'][0]} at macro-F1 {w['PIRCAD'][1]:.3f}, against "
-        f"{w['Multi-scale 1D-CNN'][1]:.3f} ({w['Multi-scale 1D-CNN'][0]}) for the CNN and "
-        f"{w['Generic-feature RF'][1]:.3f} ({w['Generic-feature RF'][0]}) for the generic "
+        f"{_shift_label(w['PIRCAD'][0])} at macro-F1 {w['PIRCAD'][1]:.3f}, against "
+        f"{w['Multi-scale 1D-CNN'][1]:.3f} ({_shift_label(w['Multi-scale 1D-CNN'][0])}) for the CNN and "
+        f"{w['Generic-feature RF'][1]:.3f} ({_shift_label(w['Generic-feature RF'][0])}) for the generic "
         "forest, and its mean over all conditions is "
         f"{w['PIRCAD'][3]:.3f} against {w['Multi-scale 1D-CNN'][3]:.3f} and "
         f"{w['Generic-feature RF'][3]:.3f}. The residual is invariant to most of what "
@@ -407,7 +424,7 @@ def _real(m, R):
         def g(l, s):
             return r[l][s]["summary"]["macro_f1"][0]
         names = [n for n in ("PIRCAD-rf", "Multi-scale 1D-CNN", "Generic-feature RF") if n in r[L[0]]]
-        rows = [[l] + [f"{g(l, n):.3f}" for n in names] +
+        rows = [[_noise(l)] + [f"{g(l, n):.3f}" for n in names] +
                 [f"{r[l][n]['summary']['false_alarm_rate'][0]:.2f}" for n in names] for l in L]
         t2 = m.table(
             "Intel Lab under a transducer-noise shift (every mote given extra white "
@@ -419,7 +436,8 @@ def _real(m, R):
         m.p(f"Table {t2} repeats the decisive shift of Section 6.3 on the real "
             "deployment: the trained models are applied to test motes whose "
             "transducers have become noisier. At the strongest level macro-F1 falls by "
-            + ", ".join(f"{drop[n]:.3f} for {T.SYS6_LABEL.get(n, n)}" for n in names)
+            + ", ".join(f"{drop[n]:.3f} for {SHORT.get(n, n)}" for n in names[:-1])
+            + f" and {drop[names[-1]]:.3f} for {SHORT.get(names[-1], names[-1])}"
             + ". The generic forest degrades to PIRCAD's level, as in simulation, but "
             "the CNN is essentially unaffected: on real data, whose own variability is "
             "large relative to the added noise, its standardised multi-scale input "
@@ -430,7 +448,7 @@ def _real(m, R):
     du = {n: T.per_scenario_metric(e10["rows"][n], "drift", "useful_frac")[0]
           for n in ("PIRCAD-rf", "Multi-scale 1D-CNN", "Generic-feature RF")}
     m.p("Two simulated findings do carry over, in weakened form. The on-path ramp (A4) "
-        "is again unlabelable — the learned baselines call it drift (poisoning recall "
+        "again cannot be labelled — the learned baselines call it drift (poisoning recall "
         f"{mi['Multi-scale 1D-CNN']['poison_recall'][0]:.2f} and "
         f"{mi['Generic-feature RF']['poison_recall'][0]:.2f}); PIRCAD flags "
         f"{mi['PIRCAD-rf']['poison_recall'][0]:.2f} of it, largely because its noisier "
@@ -480,14 +498,14 @@ def _ablation(m, R):
         "process events be mislabelled as instrument faults. Removing the whole group "
         "of residual-character features costs "
         f"{g(full, 'macro_f1') - g('- all character features', 'macro_f1'):.3f} "
-        f"(p = {T.pfmt(p_('- all character features'))}), whereas any single member is "
+        f"({T.pstr(p_('- all character features'))}), whereas any single member is "
         "redundant with the others: excitation coherence alone changes nothing "
         f"measurable ({g('- excitation coherence', 'macro_f1'):.3f}, p = "
         f"{p_('- excitation coherence'):.2f}), and removing the noise-signature group "
         f"even raises macro-F1 to {g('- noise-signature features', 'macro_f1'):.3f} while "
         f"raising the false-drift rate to {g('- noise-signature features', 'false_drift_rate'):.3f} "
         "— a trade of label accuracy for the dangerous error.")
-    m.p("Two results contradict claims made in the original version of this work. "
+    m.p("Two results contradict hypotheses that motivated our initial design. "
         "Replacing the dedicated observers by one shared closed-loop estimator does "
         f"not significantly change macro-F1 ({g('- dedicated observers', 'macro_f1'):.3f}, "
         f"p = {p_('- dedicated observers'):.2f}) once the classifier is retrained on the "
@@ -521,7 +539,7 @@ def _ablation(m, R):
                    else e8[c8]["PIRCAD"]["summary"]["macro_f1"][0])
             gen = (R["e6"]["summary"]["Generic-feature RF"]["macro_f1"]["mean"] if c.startswith("nominal")
                    else e8[c8]["Generic-feature RF"]["summary"]["macro_f1"][0])
-            rows.append([c, f"{pir:.3f}", f"{gen:.3f}", f"{r12[c]['summary']['macro_f1'][0]:.3f}",
+            rows.append([("Nominal (180-episode bank)" if c.startswith("nominal") else T.SHIFT_LABEL.get(c, c)), f"{pir:.3f}", f"{gen:.3f}", f"{r12[c]['summary']['macro_f1'][0]:.3f}",
                          f"{r12[c]['summary']['false_alarm_rate'][0]:.3f}"])
         t2 = m.table(
             "Physics features, generic features, and both in one learner (macro-F1). The "
@@ -552,7 +570,7 @@ def _edge(m, R):
         "single DHT22, whose temperature and humidity transducers supply the "
         "cross-channel redundancy through the Magnus relation; the decision kernel "
         "(about 4 µs per sample, compiled C++) runs in the Wokwi simulator and is "
-        "unchanged from the original version of this work. With no learned model on the "
+        "unchanged from our earlier prototype. With no learned model on the "
         "node, it recalls 88.1 % and 87.5 % of linear and exponential drift, 100 % of "
         "step and spike injections and 93.1 % of a drift-shaped ramp above the ageing "
         "envelope, and admits under 1 °C of a 6 °C step or a stealth ramp into its "
@@ -571,7 +589,7 @@ def _cost(m, R):
         f"stages run on {lat['activation']*100:.0f} % of channel-samples. The "
         "single-sample forest evaluation of Section 4.4 is what makes this feasible: "
         "the library implementation spends about 16 ms per single-sample call on "
-        "per-tree task dispatch, which made the original pipeline 30× slower with "
+        "per-tree task dispatch, which made a straightforward implementation 30× slower with "
         "identical outputs. The two-channel edge kernel runs in closed form on an "
         "ESP32-class microcontroller (Section 6.8).")
 
@@ -621,7 +639,7 @@ def discussion_and_conclusion(m, R):
         "(Section 6.6) shows the classifier back-end can be swapped without touching the "
         "governance, which is where we expect the most productive follow-up work.")
     m.h2("7.2 Three defects exposed by the stronger evaluation")
-    m.p("The original version of this work reported its results on four seeds against "
+    m.p("Our earlier prototype of this system was evaluated on four seeds against "
         "its own predecessor. Re-evaluating it at the scale reported here exposed three "
         "defects, each invisible to the original benchmark:")
     m.bullets([

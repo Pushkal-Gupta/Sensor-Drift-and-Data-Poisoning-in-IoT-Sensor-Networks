@@ -12,7 +12,7 @@ AUTHORS = ("Pushkal Gupta^{a}, Shridhar M^{a}, Vanka Kaushik^{a}, "
            "Syamasudha Veeragandham^{a,*}")
 AFFIL = ("^{a} School of Computer Science and Engineering, Vellore Institute of "
          "Technology, Vellore, Tamil Nadu 632014, India")
-CORR = ("^{*} Corresponding author: Syamasudha Veeragandham. E-mail addresses: pushkalgupta2005@gmail.com "
+CORR = ("^{*} Corresponding author: Syamasudha Veeragandham. E-mail addresses: pushkal.gupta2023@vitstudent.ac.in "
         "(P. Gupta), shridhar.m2023@vitstudent.ac.in (S. M), "
         "vanka.kaushik2023@vitstudent.ac.in (V. Kaushik), syamasudha.v@vit.ac.in "
         "(S. Veeragandham).")
@@ -59,7 +59,7 @@ def methods(m, R):
         "them has nothing on which to condition its response, and it does the same "
         "thing whatever the reason for the deviation. Recent work has begun to separate "
         "faults from attacks {cite:liu2025,hu2024,shen2024,shukla2023} and adversarial "
-        "from real concept drift {cite:korycki2023}, but between hypotheses that differ "
+        "from real concept drift {cite:korycki2023}, but only between hypotheses that differ "
         "in their signature at the plant, not against an injection deliberately matched "
         "to benign ageing; and none of it closes the loop from the verdict to *which "
         "adaptive elements may learn from the data*.")
