@@ -334,7 +334,7 @@ def _safety(m, R):
         "benign drift.",
         ["System", "Alarm fired", "Spurious trip", "Premature trip",
          "Error at crossing (°C)", "Poison forwarded", "Drift correction error (°C)"],
-        T.safety_table(e9), widths=[3.6, 1.5, 1.5, 1.5, 3.2, 1.6, 2.4], font=8)
+        T.safety_table(e9), widths=[3.5, 1.4, 1.6, 1.8, 3.0, 1.7, 2.3], font=8)
     base = ("EWMA recalibration", "Kalman bias estimator", "Page-Hinkley recalibration")
     m.p(f"Table {t} shows the consequence of absorbing an injection. None of the three "
         "self-calibrating baselines ever raises the alarm: each adopts part of the "

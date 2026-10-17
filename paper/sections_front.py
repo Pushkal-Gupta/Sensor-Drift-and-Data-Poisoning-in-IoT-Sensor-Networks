@@ -6,16 +6,17 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 
-TITLE = ("Drift or Deception? Physics-Anchored Root-Cause Learning for "
-         "Poisoning-Resilient Self-Calibration in IoT Sensor Networks")
-AUTHORS = ("Pushkal Gupta^{a}, Shridhar M^{a}, Vanka Kaushik^{a}, "
-           "Syamasudha Veeragandham^{a,*}")
-AFFIL = ("^{a} School of Computer Science and Engineering, Vellore Institute of "
-         "Technology, Vellore, Tamil Nadu 632014, India")
-CORR = ("^{*} Corresponding author: Syamasudha Veeragandham. E-mail addresses: pushkal.gupta2023@vitstudent.ac.in "
-        "(P. Gupta), shridhar.m2023@vitstudent.ac.in (S. M), "
-        "vanka.kaushik2023@vitstudent.ac.in (V. Kaushik), syamasudha.v@vit.ac.in "
-        "(S. Veeragandham).")
+TITLE = ("Ageing or Attack? Cause-Aware Learning for Safe Self‑Calibration Under "
+         "Disguised Sensor Poisoning")
+# Author block laid out as in the authors' original draft (Paper.docx).
+AUTHORS = ("Pushkal Gupta^{1}, Shridhar M^{2}, Vanka Kaushik^{3}, "
+           "Syamasudha Veeragandham^{4}")
+AFFIL = ("^{1,2,3,4}School of Computer Science and Engineering, Vellore Institute of "
+         "Technology, Vellore, Tamil Nadu, India – 632014")
+EMAILS = ("Email: ^{1}pushkal.gupta2023@vitstudent.ac.in, "
+          "^{2}shridhar.m2023@vitstudent.ac.in, ^{3}vanka.kaushik2023@vitstudent.ac.in, "
+          "^{4}syamasudha.v@vit.ac.in")
+CORR = "^{4}Corresponding author"
 
 KEYWORDS = ("Sensor drift; Data poisoning; Self-calibration; Root-cause "
             "classification; Physics-informed machine learning; Adversarial robustness; "

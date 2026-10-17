@@ -5,12 +5,17 @@
 **Old:** Physics-Informed Fog-Assisted Root-Cause Disambiguation of Sensor Drift and
 Data Poisoning in IoT Sensor Networks with Differential Response Control
 
-**New:** Drift or Deception? Physics-Anchored Root-Cause Learning for
-Poisoning-Resilient Self-Calibration in IoT Sensor Networks
+**New:** Ageing or Attack? Cause-Aware Learning for Safe Self-Calibration
+Under Disguised Sensor Poisoning
 
-The new title states the ML problem (cause-aware learning that protects
-self-calibrating elements from poisoning) rather than the system architecture.
-MLWA reviewers read for the learning contribution.
+The new title poses the question the paper answers (is a deviation sensor
+ageing or an attack?), names the learning problem (cause-aware learning), the
+end it serves (self-calibration that stays safe) and the threat (poisoning
+disguised as ageing), rather than the system architecture.
+
+The manuscript is laid out like the authors' original draft: `paper/template.docx`
+is `Paper.docx` with its body removed, and `paper/docbuilder.py` copies that
+draft's block formats. Highlights are written to `paper/Highlights.docx`.
 
 ## What changed in the paper
 
