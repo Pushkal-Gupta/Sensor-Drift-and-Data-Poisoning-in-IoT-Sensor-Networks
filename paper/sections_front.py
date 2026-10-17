@@ -8,14 +8,15 @@ HERE = Path(__file__).resolve().parent
 
 TITLE = ("Drift or Deception? Physics-Anchored Root-Cause Learning for "
          "Poisoning-Resilient Self-Calibration in IoT Sensor Networks")
-AUTHORS = ("Pushkal Gupta^{a}, Shridhar M^{a}, Vanka Kaushik^{a}, "
-           "Syamasudha Veeragandham^{a,*}")
-AFFIL = ("^{a} School of Computer Science and Engineering, Vellore Institute of "
-         "Technology, Vellore, Tamil Nadu 632014, India")
-CORR = ("^{*} Corresponding author: Syamasudha Veeragandham. E-mail addresses: pushkal.gupta2023@vitstudent.ac.in "
-        "(P. Gupta), shridhar.m2023@vitstudent.ac.in (S. M), "
-        "vanka.kaushik2023@vitstudent.ac.in (V. Kaushik), syamasudha.v@vit.ac.in "
-        "(S. Veeragandham).")
+AUTHORS = ("Pushkal Gupta^{1}, Shridhar M^{2}, Vanka Kaushik^{3}, "
+           "Syamasudha Veeragandham^{4,*}")
+_VIT = ("School of Computer Science and Engineering, Vellore Institute of Technology, "
+        "Vellore, Tamil Nadu 632014, India")
+AFFIL = [f"^{{1}} {_VIT}. E-mail: pushkal.gupta2023@vitstudent.ac.in",
+         f"^{{2}} {_VIT}. E-mail: shridhar.m2023@vitstudent.ac.in",
+         f"^{{3}} {_VIT}. E-mail: vanka.kaushik2023@vitstudent.ac.in",
+         f"^{{4}} {_VIT}. E-mail: syamasudha.v@vit.ac.in"]
+CORR = "^{*} Corresponding author: Syamasudha Veeragandham (syamasudha.v@vit.ac.in)."
 
 KEYWORDS = ("Sensor drift; Data poisoning; Self-calibration; Root-cause "
             "classification; Physics-informed machine learning; Adversarial robustness; "
