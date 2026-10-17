@@ -25,8 +25,7 @@ def main() -> None:
     m = Manuscript(REFS)
     m.title(front.TITLE)
     m.centered(front.AUTHORS)
-    for line in front.AFFIL:
-        m.centered(line, 10, italic=True)
+    m.centered(front.AFFIL, 10, italic=True)
     m.centered(front.CORR, 9)
 
     m.h1("Highlights")
