@@ -15,3 +15,6 @@ hardware/ci/edge_runs.csv
 
 # third-party datasets, fetched by pircad/indoor.py::download()
 data/external/
+
+# Word lock files
+~$*
