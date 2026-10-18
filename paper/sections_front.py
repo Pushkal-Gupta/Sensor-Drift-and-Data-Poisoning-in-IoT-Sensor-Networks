@@ -30,22 +30,23 @@ def methods(m, R):
     m.p("Networked sensing underpins industrial monitoring, building automation and "
         "environmental observation, and every analytic, control decision and safety "
         "interlock computed downstream inherits the trustworthiness of the stream it is "
-        "given {cite:mishra2024,xing2024}. That stream is produced by large populations "
-        "of cheap, unattended transducers, and it goes bad for two very different "
-        "reasons. Transducers age: their output acquires a slow, smooth bias, and a "
-        "drifting sensor is still a working instrument that should be recalibrated "
-        "rather than discarded {cite:ahmad2024,schaller2025}. And streams are attacked: "
-        "false-data injection fabricates readings that are individually plausible "
-        "{cite:xing2024,shen2024}, and acoustic or thermal injection at the transducer "
-        "itself bypasses every cryptographic protection on the link "
+        "given {cite:mishra2024,xing2024}. In practice these streams come from many "
+        "low-cost transducers left to run unattended, and their readings can become "
+        "wrong for two quite different reasons. The first is ageing. Over time a "
+        "transducer picks up a slow, smooth offset, yet it keeps measuring the process, "
+        "so the right action is to recalibrate it, not to throw it away "
+        "{cite:ahmad2024,schaller2025}. The second is attack. False-data injection "
+        "produces values that each look reasonable on their own "
+        "{cite:xing2024,shen2024}, and acoustic or thermal tampering at the sensor "
+        "itself happens before any encryption on the link can help "
         "{cite:sahu2025,ino2024,morand2024}.")
-    m.p("The two causes call for opposite responses, yet they can be made to look "
-        "identical. A bias that grows by a few hundredths of a degree per minute is "
-        "exactly what an ageing thermistor produces and exactly what a patient attacker "
-        "produces. This matters because modern IoT pipelines *adapt*: they recalibrate "
-        "against their own accepted data {cite:ahmad2024}, re-estimate baselines and "
-        "thresholds {cite:lee2025}, and detect and absorb concept drift to suppress "
-        "false alarms {cite:xu2024,gama2014}. An adaptive element that treats every "
+    m.p("Ageing and attack need opposite responses, but an attacker can make one look "
+        "like the other. An offset that rises by a few hundredths of a degree each "
+        "minute is what an old thermistor does, and it is also what a careful attacker "
+        "would inject. The problem is sharpened by the fact that IoT pipelines now "
+        "*adapt*. They recalibrate on the data they have accepted {cite:ahmad2024}, "
+        "update their baselines and thresholds {cite:lee2025}, and absorb concept drift "
+        "so that it stops raising alarms {cite:xu2024,gama2014}. An adaptive element that treats every "
         "slow, persistent deviation as benign drift will absorb an injection shaped like "
         "drift into its own reference, and the damage outlasts the attack: once the "
         "reference has moved, genuine faults are under-reported. This has been shown "
@@ -70,12 +71,13 @@ def methods(m, R):
         "genuine excursion of the monitored process; and to let that verdict gate every "
         "element that adapts. The approach, PIRCAD (physics-anchored root-cause "
         "attribution with adaptation governance), rests on one structural idea: each "
-        "channel is judged against an expectation that it cannot influence. A "
-        "leave-one-channel-out (dedicated-observer) estimator anchored on the other "
-        "instruments and on the process physics produces a residual in which a slow "
-        "bias appears at full amplitude, and whose *character* — not its size or rate — "
-        "differs between a drifting transducer that still observes the real process and "
-        "a substituted stream that does not.")
+        "channel is judged against an expectation that it cannot influence. For each "
+        "channel we build that expectation from the other instruments and the process "
+        "physics only (a leave-one-channel-out, or dedicated-observer, estimator). A "
+        "slow bias on the channel then shows up in the residual at its full size. Size "
+        "and rate cannot tell ageing from attack, but the *character* of the residual "
+        "can: a drifting transducer still sees the real process, while a substituted "
+        "stream does not.")
     m.p("The contributions are:")
     m.bullets([
         "**A formulation and threat model** for drift-versus-poisoning attribution in "
@@ -107,8 +109,8 @@ def methods(m, R):
         "their fixes.",
     ])
     m.p("Section 2 reviews related work. Section 3 formalises the problem and the "
-        "threat model. Section 4 describes the method, Section 5 the experimental "
-        "design, and Section 6 the results. Section 7 discusses limitations and threats "
+        "threat model. The method is given in Section 4 and the experimental design in "
+        "Section 5, and Section 6 presents the results. Section 7 discusses limitations and threats "
         "to validity, and Section 8 concludes.")
 
     # ================================================================ 2
@@ -227,30 +229,30 @@ def methods(m, R):
         "or growth rate is at chance by construction. The levels differ in what the "
         "attacker knows about the live process:")
     m.bullets([
-        "**A0 (stale surrogate).** The attacker substitutes a lagged estimate of the "
-        "process (an exponential moving average with factor 0.02) plus the ramp and "
-        "white noise of the transducer's variance.",
+        "**A0 (stale surrogate).** The attacker replaces the reading with a delayed "
+        "copy of the process (an exponential moving average, factor 0.02), adds the ramp, "
+        "and adds white noise with the same variance as the transducer.",
         "**A1 (noise-matched).** As A0, but the noise reproduces the transducer's "
         "coloured (AR(1)) spectrum.",
         "**A2 (higher fidelity).** The surrogate tracks the live process with smoothing "
         "factor 0.05–0.30.",
-        "**A3 (exact state).** The attacker knows the exact real-time process state "
-        "(factor 1.0) but not the transducer's noise realisation.",
-        "**A4 (on-path).** The attacker sits on the link and adds the ramp to the "
-        "*genuine* reading.",
-        "**A5 (coordinated).** One forged temperature drives every instrument the "
-        "attacker controls (T, P, RH), so the instrument-side physical constraints "
-        "remain satisfied.",
+        "**A3 (exact state).** The attacker has the true process state in real time "
+        "(factor 1.0); only the transducer's own noise is unknown to it.",
+        "**A4 (on-path).** Sitting on the link, the attacker leaves the *genuine* "
+        "reading in place and simply adds the ramp to it.",
+        "**A5 (coordinated).** The attacker controls T, P and RH and derives all three "
+        "from a single forged temperature, so the physical relations between the "
+        "instruments still hold.",
     ])
-    m.p("Two further attack families are not rate-matched: isolated spike "
-        "substitutions and replay of an earlier genuine window. The defender is assumed "
-        "to have a clean commissioning window and a process model of moderate accuracy, "
-        "and the attacker is assumed not to control the inputs u(k) at A0–A4.")
-    m.h2("3.3 What can and cannot be separated")
-    m.p("**Proposition 1 (observational equivalence).** Under A4, with ramp "
-        "b(k) = ρ(k − k_{0}) and |ρ| within the ageing envelope, the distribution of "
-        "the attacked channel's reported sequence is identical to that of the same "
-        "channel under benign drift with b_{i} = b. *Proof.* Both equal "
+    m.p("We also test two attack families that are not rate-matched: isolated spike "
+        "substitutions, and replay of an earlier genuine window. On the defender's side "
+        "we assume a clean commissioning window and a reasonably accurate process "
+        "model; at levels A0–A4 we assume the attacker cannot touch the inputs u(k).")
+    m.h2("3.3 Limits of separability")
+    m.p("**Proposition 1 (observational equivalence).** Let an A4 attacker add the "
+        "ramp b(k) = ρ(k − k_{0}) with |ρ| inside the ageing envelope. The sequence the "
+        "attacked channel reports then has exactly the same distribution as that channel "
+        "would have under benign drift with b_{i} = b. *Proof.* Both equal "
         "h_{i}(x(k)) + e_{i}(k) + ρ(k − k_{0}) with the same noise realisation; no "
         "function of {y_{i}(k)} can separate them, and the other channels are "
         "untouched in both cases. ∎")
@@ -260,27 +262,27 @@ def methods(m, R):
     m.p("**Proposition 2 (bounded harm of anchored correction).** Let the "
         "calibration offset c_{i} be driven only by residuals against an expectation "
         "ŷ_{i}(k | y_{−i}(k), u(k)) that excludes channel i, with per-sample rate limit "
-        "δ and total cap c_{max}. If an A4 ramp b(k) is classified as drift, the "
-        "forwarded corrected value satisfies |y_{i} − c_{i} − h_{i}(x)| ≤ "
-        "|ε_{ref}| + |e_{i}| + max(0, |b| − c_{max}) + L, where ε_{ref} is the "
-        "reference error and L ≤ max(0, |ḃ| − δ)·t the tracking lag. *Proof.* Because the "
-        "expectation excludes channel i, the residual estimates b + ε_{ref}; the "
-        "corrector removes it up to its rate and cap limits. ∎")
-    m.p("Proposition 2 is the reason the response, and not only the classifier, "
-        "matters: an equivalent attack that is (unavoidably) called drift is corrected "
-        "against the physics rather than absorbed into a self-referenced baseline. By "
-        "contrast, a corrector anchored on the channel's own history — a rolling "
-        "mean, an EWMA reference, a Page-Hinkley-triggered recalibration — tracks b and "
-        "leaves the full bias in the forwarded value. Sections 6.2 and 6.4 measure both "
-        "statements.")
+        "δ and total cap c_{max}. Suppose an A4 ramp b(k) is labelled as drift. Then "
+        "the corrected value that is forwarded obeys |y_{i} − c_{i} − h_{i}(x)| ≤ "
+        "|ε_{ref}| + |e_{i}| + max(0, |b| − c_{max}) + L, with ε_{ref} the error of the "
+        "reference and L ≤ max(0, |ḃ| − δ)·t the lag of the tracker. *Proof.* The "
+        "expectation does not use channel i, so the residual is an estimate of "
+        "b + ε_{ref}, and the corrector subtracts it within its rate and cap limits. ∎")
+    m.p("This is why the response matters as much as the classifier. An attack that "
+        "can only be labelled drift is still corrected against the physics, instead of "
+        "being folded into a baseline built from the channel itself. A corrector that "
+        "follows the channel's own history (a rolling mean, an EWMA reference, or "
+        "recalibration triggered by Page-Hinkley) does the opposite: it follows b, and "
+        "the whole bias reaches the forwarded value. Both claims are tested in "
+        "Sections 6.2 and 6.4.")
 
     # ================================================================ 4
     m.h1("4. Method")
     m.figure(HERE / "figures" / "architecture.png",
-             "PIRCAD at the fog node. The expensive stages (E4, E5, E8) run only when "
-             "the cheap trigger E3 fires. The adaptation governor E7 gates every element "
-             "that learns: the process model's state, the residual statistics and the "
-             "calibration offsets.", 15.5)
+             "Structure of PIRCAD on the fog node. Stages E4, E5 and E8 are costly and "
+             "run only after the lightweight trigger E3 fires. The adaptation governor "
+             "E7 decides what each learning element may use: the process-model state, "
+             "the residual statistics and the calibration offsets.", 15.5)
     m.h2("4.1 Leave-one-out physics residuals (E1–E2)")
     m.p("For each channel i the expected value is produced by a dedicated observer "
         "whose state excludes that channel:")
@@ -345,50 +347,51 @@ def methods(m, R):
         "violation ḡ, its share of the violation energy and its margin over the "
         "runner-up:")
     m.eq("h* = argmax_{h} ( s_{h}ᵀ ḡ / ‖ḡ‖ )²")
-    m.p("This answers a question orthogonal to drift versus poisoning — is the deviation "
-        "on the instrument side or has the plant moved? — and it is what protects a "
-        "genuine process event from being calibrated away. In the indoor embodiment, "
-        "for example, local heating moves temperature and humidity together at constant "
-        "vapour pressure and leaves the Magnus constraint intact, whereas a transducer "
-        "bias violates it.")
+    m.p("Localisation does not decide between drift and poisoning. It asks a "
+        "different question: did an instrument go wrong, or did the plant itself "
+        "change? Getting this right is what stops a real process event from being "
+        "calibrated out. Indoors, for instance, a local heat source shifts temperature "
+        "and humidity together while vapour pressure stays fixed, so the Magnus "
+        "relation still holds; a biased transducer breaks it.")
     m.h2("4.4 Root-cause learner (E5)")
-    m.p("The feature vector feeds a four-class classifier. Training data are collected "
-        "by running the pipeline with no classifier, so features at training time are "
-        "exactly those at inference time; non-target channels are labelled NORMAL, "
-        "which teaches the learner to stay quiet on collateral triggers. A thin "
-        "physical override is applied in the hybrid embodiment: a confident process-side "
-        "localisation is authoritative for PROCESS (where being wrong is a safety "
-        "issue), and a PROCESS verdict is overruled when the violations localise cleanly "
-        "to the channel itself. The learner is interchangeable; we evaluate a random "
-        "forest {cite:breiman2001} (default), gradient boosting, logistic regression, "
-        "a multilayer perceptron and a training-free rule set. Because a fog node "
-        "classifies one sample at a time, the forest is flattened into arrays and all "
-        "trees are traversed in a single vectorised pass, numerically identical to the "
-        "library implementation (asserted in the test suite) and about 200× faster "
-        "for single samples.")
+    m.p("A four-class classifier takes the feature vector as input. To build its "
+        "training set we run the full pipeline with the classifier switched off, which "
+        "guarantees that the features seen in training match those seen at inference. "
+        "Channels other than the target are labelled NORMAL, so the learner learns to "
+        "ignore triggers caused by a neighbour's fault. The hybrid version adds a small "
+        "physical override. When localisation points confidently at the process, the "
+        "verdict is PROCESS, since a mistake there affects safety; when the violations "
+        "point clearly at the channel itself, a PROCESS verdict is rejected. Any "
+        "classifier can be used. We test a random forest {cite:breiman2001} (the "
+        "default), gradient boosting, logistic regression, a multilayer perceptron and "
+        "a rule set that needs no training. A fog node classifies samples one at a "
+        "time, so we store the forest as flat arrays and walk all trees in one "
+        "vectorised pass. The output matches the library implementation exactly (the "
+        "test suite checks this) and is about 200× faster per sample.")
     m.h2("4.5 Adaptation governance and differential response (E7–E8)")
-    m.p("Each channel carries a state in {TRUSTED, WATCH, DRIFTING, QUARANTINED, "
-        "RECOVERING}. A channel whose trigger fires leaves TRUSTED immediately, before "
-        "any cause is decided, and from then on contributes reduced weight to the "
-        "process model and nothing to the residual statistics. The response is "
-        "cause-dependent:")
+    m.p("Every channel is in one of five states: TRUSTED, WATCH, DRIFTING, "
+        "QUARANTINED or RECOVERING. As soon as its trigger fires, a channel drops out of "
+        "TRUSTED, even before a cause has been assigned. From that point it carries less "
+        "weight in the process model and no longer updates the residual statistics. "
+        "What happens next depends on the cause:")
     m.bullets([
         "**DRIFT** → bounded, rate-limited, audited recalibration "
         "c_{i} ← clip(c_{i} + clip(γ b̂_{i}, ±δ), ±c_{max}), with b̂_{i} the robust "
-        "residual bias; data keep flowing. The drift state is sticky while the "
-        "correction is in force, because a residual held at zero by the correction is "
-        "evidence that the correction works, not that the sensor recovered.",
-        "**POISON** → quarantine: nothing is forwarded, every adaptive element is "
-        "frozen, a security alert is raised, and the channel is held for a minimum "
-        "period before it may recover.",
-        "**PROCESS** → forward and alarm; calibration is forbidden.",
+        "residual bias; data keep flowing. The channel stays in the drift state while "
+        "the correction is active: a residual kept at zero by the correction shows that "
+        "the correction is working, not that the sensor has healed.",
+        "**POISON** → quarantine. The node forwards nothing, freezes all adaptive "
+        "elements and raises a security alert, and the channel must wait out a minimum "
+        "hold before it can recover.",
+        "**PROCESS** → the data are forwarded with an alarm, and no calibration is "
+        "allowed.",
     ])
-    m.p("**Quarantine policy.** A quarantined channel is not released by a drift "
-        "verdict — otherwise an attacker could buy recalibration by steering one "
-        "verdict — and the node acts on the governor's standing state rather than on "
-        "the latest verdict, so a drift verdict on a quarantined channel never "
-        "forwards data. By default the quarantine is *latched*: the channel returns "
-        "only after the freeze hold and a clean run. We also evaluate an "
+    m.p("**Quarantine policy.** A drift verdict cannot release a quarantined channel; "
+        "if it could, an attacker would only need to push one verdict towards drift to "
+        "get recalibrated. The node also follows the governor's current state, not the "
+        "most recent verdict, so a quarantined channel forwards nothing even when it is "
+        "labelled drift. Quarantine is *latched* by default, meaning the channel comes "
+        "back only after the freeze hold has passed and a clean run has been seen. We also evaluate an "
         "availability-oriented alternative, *re-attribution*, in which a quarantined "
         "channel moves to DRIFTING after the hold plus a sustained run of 200 "
         "consecutive drift verdicts; Section 6.4 shows why latching is the safer "

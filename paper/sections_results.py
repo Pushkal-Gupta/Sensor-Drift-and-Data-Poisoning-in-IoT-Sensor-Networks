@@ -78,17 +78,18 @@ def abstract(R):
     base_alarm = max(S9[s]["alarm_fired"][0] for s in
                      ("EWMA recalibration", "Kalman bias estimator", "Page-Hinkley recalibration"))
     return (
-        "IoT pipelines increasingly recalibrate, re-baseline and retrain on the data "
-        "they accept, so a false-data injection shaped like benign transducer ageing is "
-        "absorbed as the new normal and later hides genuine faults. We formulate "
-        "drift-versus-poisoning attribution as cause-aware learning under adversarial "
-        "distribution shift, with an attacker hierarchy that matches benign ageing in "
-        "magnitude and rate, and show that an on-path attacker is observationally "
-        "equivalent to drift while a physics-anchored, bounded correction still bounds "
-        "its harm. PIRCAD judges each channel against a leave-one-out physics "
-        "expectation, classifies the cause (normal, drift, poisoning, process event) "
-        "from residual-character and constraint-localisation features, and lets the "
-        "verdict gate every adaptive element. Across 180 held-out simulated episodes, "
+        "Many IoT pipelines now recalibrate, update their baselines and retrain using "
+        "the data they accept. An injection that imitates normal transducer ageing is "
+        "therefore learned as the new normal, and it later masks real faults. We cast "
+        "the task of telling drift from poisoning as cause-aware learning under "
+        "adversarial distribution shift. Our attacker hierarchy matches benign ageing in "
+        "size and rate, and we prove that an on-path attacker cannot be told apart "
+        "from drift, yet a bounded correction anchored in physics still limits the damage "
+        "it can do. PIRCAD compares each channel with a physics-based "
+        "expectation that leaves that channel out, assigns one of four causes (normal, "
+        "drift, poisoning, process event) using features of the residual's character "
+        "and of where constraint violations localise, and uses that cause to decide what "
+        "each adaptive element may learn. Across 180 held-out simulated episodes, "
         f"PIRCAD reaches macro-F1 {R['mf1']['PIRCAD-rf']:.3f} (random forest) and "
         f"{R['mf1']['PIRCAD-hgb']:.3f} (gradient boosting); a supervised 1D-CNN "
         f"({R['mf1']['Multi-scale 1D-CNN']:.3f}) and a generic-feature forest "
@@ -206,11 +207,12 @@ def _attacker(m, R):
          "Useful PIRCAD", "Useful CNN", "Useful RF", "Fwd. error PIRCAD"],
         T.attacker_table(e7), widths=[3.6, 1.4, 1.4, 1.4, 1.5, 1.4, 1.4, 1.4, 1.5], font=7.5)
     m.p(f"Table {t} sweeps the threat hierarchy of Section 3.2 without retraining any "
-        "model. Against attackers who know the live process only through a lagged "
-        "surrogate (A0–A2 up to fidelity 0.10) every learned system recalls "
-        f"≥ {min(g(c, s, 'poison_recall') for c in ('stale, white (default)', 'stale, matched noise', 'fidelity 0.05', 'fidelity 0.10') for s in T.ATT_SYS):.2f} "
-        "of the poisoning; noise matching alone buys the attacker nothing. The systems "
-        "separate as the surrogate sharpens. At fidelity 0.30 PIRCAD retains recall "
+        "model. When the attacker sees the live process only through a delayed "
+        "surrogate (A0–A2, fidelity up to 0.10), every learned system catches at least "
+        f"{min(g(c, s, 'poison_recall') for c in ('stale, white (default)', 'stale, matched noise', 'fidelity 0.05', 'fidelity 0.10') for s in T.ATT_SYS):.2f} "
+        "of the poisoning, and copying the sensor's noise spectrum gains the attacker "
+        "nothing. Differences between the systems appear only once the surrogate becomes "
+        "more accurate. At fidelity 0.30 PIRCAD retains recall "
         f"{g('fidelity 0.30', 'PIRCAD', 'poison_recall'):.2f} against "
         f"{g('fidelity 0.30', 'Generic-feature RF', 'poison_recall'):.2f} (generic forest) and "
         f"{g('fidelity 0.30', 'Multi-scale 1D-CNN', 'poison_recall'):.2f} (CNN), with the "
@@ -242,10 +244,10 @@ def _attacker(m, R):
         "instrument-side constraints satisfied; PIRCAD's localisation then attributes "
         "the deviation to the process, and the node forwards it with a process alarm "
         f"(forwarded error {g('coordinated, stale', 'PIRCAD', 'fwd_err_mean'):.1f} °C). "
-        "The alarm is raised, but the forged values are delivered. Defending against "
-        "A5 requires an instrument the attacker does not control — an independent "
-        "reference, an actuator-side measurement, or a cryptographically attested "
-        "channel — which is outside the scope of a single fog node.")
+        "The alarm is raised, but the forged values are delivered. Stopping A5 needs at "
+        "least one instrument outside the attacker's control, such as an independent "
+        "reference, a measurement on the actuator side, or a channel with cryptographic "
+        "attestation. A single fog node cannot provide that on its own.")
     m.figure(FIG / "v2_fig_attacker.png",
              "Attacker-capability sweep. (a) Poisoning recall; (b) useful-data rate on "
              "the attacked channel. Left to right the attacker knows more about the "
@@ -291,47 +293,48 @@ def _shift(m, R):
         f"{w['Generic-feature RF'][1]:.3f} ({_shift_label(w['Generic-feature RF'][0])}) for the generic "
         "forest, and its mean over all conditions is "
         f"{w['PIRCAD'][3]:.3f} against {w['Multi-scale 1D-CNN'][3]:.3f} and "
-        f"{w['Generic-feature RF'][3]:.3f}. The residual is invariant to most of what "
-        "changed — the set-point, the ambient and the plant dynamics enter the "
-        "expectation as well as the measurement — so only shifts that alter the "
-        "residual itself hurt. Two of those are real weaknesses. Under the strongest "
-        "noise shift PIRCAD's false-drift rate rises to "
-        f"{g('noise x3', 'PIRCAD', 'false_drift_rate'):.2f}, because the noise-signature "
-        "features that separate a substituted stream from a drifting one are "
-        "calibrated to the commissioning noise; and an inaccurate process model "
-        f"(mismatch ×6) raises its false-alarm rate to "
-        f"{g('twin mismatch x6', 'PIRCAD', 'false_alarm_rate'):.2f}. PIRCAD's robustness "
-        "is therefore conditional on a process model of moderate accuracy, which is the "
-        "price of judging a channel against physics rather than against its own past.")
+        f"{w['Generic-feature RF'][3]:.3f}. Most of these shifts leave the residual "
+        "untouched, because a new set-point, ambient or plant dynamics changes the "
+        "expectation and the measurement together. Only shifts that change the residual "
+        "itself cause harm, and two of them expose genuine weaknesses. With the "
+        "strongest noise shift the false-drift rate climbs to "
+        f"{g('noise x3', 'PIRCAD', 'false_drift_rate'):.2f}: the noise-signature "
+        "features, which distinguish a substituted stream from a drifting one, were "
+        "calibrated on the commissioning noise level. And with a poor process model "
+        f"(mismatch ×6) the false-alarm rate reaches "
+        f"{g('twin mismatch x6', 'PIRCAD', 'false_alarm_rate'):.2f}. In short, PIRCAD is "
+        "only as robust as its process model is accurate; that is the cost of checking a "
+        "channel against physics instead of against its own history.")
     m.figure(FIG / "v2_fig_shift.png",
-             "Macro-F1 under distribution shift without retraining (mean, 95 % CI). Each "
-             "data-driven learner has a condition under which it collapses; PIRCAD's "
-             "worst case is bounded away from them. Mismatch conditions apply to "
-             "PIRCAD only.", 15.5)
+             "Macro-F1 under distribution shift, with no retraining (mean, 95 % CI). "
+             "Both data-driven learners break down under at least one condition, while "
+             "PIRCAD's lowest score stays well above theirs. The model-mismatch "
+             "conditions only apply to PIRCAD.", 15.5)
 
 
 def _safety(m, R):
     e9 = R["e9"]
     S, D = e9["summary"], e9["drift_summary"]
     m.h2("6.4 Does the safety function survive the attack?")
-    m.p("Label accuracy is a proxy. The quantity that matters is whether the system's "
-        "adaptive elements survive an attack well enough to report the next genuine "
-        "fault. In each of 120 episodes (20 seeds × 3 attack rates × 2 attackers: A0, "
+    m.p("Correct labels are only a means to an end. What really counts is whether, "
+        "after an attack, the adaptive parts of the system are still sound enough to "
+        "report the next real fault. In each of 120 episodes (20 seeds × 3 attack rates × 2 attackers: A0, "
         "and a fidelity-0.30 noise-matched A2), a rate-matched injection biases the "
         "internal temperature downwards for 4500 samples; the attacker then withdraws "
-        "and the heater contactor welds shut, a genuine over-temperature fault. A "
-        "cloud-side alarm at 34 °C is applied to whatever the fog layer forwards. Each "
+        "and the heater contactor welds shut, a genuine over-temperature fault. In the "
+        "cloud, an alarm fires when the value forwarded by the fog layer passes 34 °C. "
+        "Each "
         "self-calibrating baseline was tuned on benign drift (training seeds) to do its "
         "own job well, and a benign-drift arm (60 episodes, no attack) measures that "
         "job.")
     t = m.table(
         "Attack-then-fault (120 episodes) and benign drift (60 episodes). Spurious "
         "trip: the forwarded value crossed 34 °C before the fault existed. Premature "
-        "trip: it crossed after the fault began but ≥ 5 samples before the plant did "
-        "(over-reading a real excursion; fails safe). Error at crossing: forwarded "
-        "minus true temperature when the plant truly crossed 34 °C, mean [95 % CI]. "
-        "The last column is the mean error of the forwarded, corrected value during "
-        "benign drift.",
+        "trip: the forwarded value crossed during the fault, at least 5 samples ahead of "
+        "the plant (a real excursion read too high, which errs on the safe side). Error "
+        "at crossing: forwarded temperature minus true temperature at the moment the "
+        "plant actually reached 34 °C, mean [95 % CI]. Last column: mean error of the "
+        "corrected, forwarded value under benign drift.",
         ["System", "Alarm fired", "Spurious trip", "Premature trip",
          "Error at crossing (°C)", "Poison forwarded", "Drift correction error (°C)"],
         T.safety_table(e9), widths=[3.5, 1.4, 1.6, 1.8, 3.0, 1.7, 2.3], font=8)
@@ -370,11 +373,11 @@ def _safety(m, R):
         "than that of the tuned Kalman and Page-Hinkley correctors "
         f"({D['Kalman bias estimator']['drift_fwd_error'][0]:.2f} and "
         f"{D['Page-Hinkley recalibration']['drift_fwd_error'][0]:.2f} °C), because its "
-        "correction is rate-limited and is only engaged after the drift verdict. A "
-        "deployment that faces no adversary should prefer those correctors; one that "
-        "does should not use them unguarded.")
+        "correction is rate-limited and is only engaged after the drift verdict. Where "
+        "no attacker is expected, those correctors are the better choice; where one is, "
+        "they should not run without a guard.")
     m.figure(FIG / "v2_fig_safety.png",
-             "Safety under adaptation poisoning. (a) Fraction of episodes in which the "
+             "Effect of poisoning the adaptation on the safety alarm. (a) Share of episodes in which the "
              "cloud-side 34 °C alarm fired for the genuine fault; (b) forwarded minus "
              "true temperature at the true crossing (negative = under-report, the "
              "dangerous direction); (c) correction error during benign drift. Means "
@@ -386,9 +389,9 @@ def _real(m, R):
     S = e10["summary"]
     m.h2("6.5 Real sensor data: Intel Berkeley Research Lab")
     t = m.table(
-        f"Intel Lab, {len(e10['test_motes'])} held-out motes × 6 scenarios × 2 "
-        f"replicates ({e10['n_test_episodes']} episodes); models fitted on "
-        f"{len(e10['train_motes'])} disjoint train motes. Mean [95 % CI]; p: paired "
+        f"Intel Lab results: {e10['n_test_episodes']} test episodes "
+        f"({len(e10['test_motes'])} held-out motes, 6 scenarios, 2 replicates each), with "
+        f"all models trained on a separate set of {len(e10['train_motes'])} motes. Mean [95 % CI]; p: paired "
         "Wilcoxon on macro-F1 vs. PIRCAD (random forest), Holm-corrected. Harm: mean "
         "forwarded error on the injected channel (°C).",
         ["System", "Macro-F1", "Drift recall", "Poison recall", "Process recall",
@@ -510,22 +513,23 @@ def _ablation(m, R):
         f"not significantly change macro-F1 ({g('- dedicated observers', 'macro_f1'):.3f}, "
         f"p = {p_('- dedicated observers'):.2f}) once the classifier is retrained on the "
         "changed features: the bias is attenuated in a shared estimator's residual, but "
-        "the trigger and the remaining features still see it. And removing the "
-        "cross-sensor localisation leaves macro-F1 unchanged "
+        "the trigger and the remaining features still see it. Dropping the cross-sensor "
+        "localisation also leaves macro-F1 where it was "
         f"({g('- cross-sensor consistency', 'macro_f1'):.3f}, p = "
-        f"{p_('- cross-sensor consistency'):.2f}); in this plant the residual character "
-        "alone suffices to recognise the process event. We therefore do not claim either "
-        "element as necessary for classification in distribution. The leave-one-out "
-        "structure is kept because Proposition 2 requires an expectation that excludes "
-        "the channel; in this plant a shared estimator happens to draw most of its "
-        "weight from the other instruments, so the difference is small here but is not "
-        "guaranteed in general.")
-    m.p("The two governance rows act on effect, not on labels, which is why a "
-        "label-only ablation would rank them as worthless. Without the adaptation "
-        "governor, macro-F1 is unchanged but retraining protection falls from "
-        f"{g(full, 'retraining_protection'):.3f} to {g('- adaptation governor', 'retraining_protection'):.3f}: "
-        "every poisoned sample reaches an adaptive element. Without the differential "
-        "response, containment falls from "
+        f"{p_('- cross-sensor consistency'):.2f}), because in this plant the character of "
+        "the residual is enough to spot the process event. Neither element, then, is "
+        "needed for in-distribution classification, and we do not claim otherwise. We "
+        "keep the leave-one-out design because Proposition 2 depends on an expectation "
+        "that leaves the channel out. Here a shared estimator happens to rely mostly on "
+        "the other instruments, which is why the gap is small; that will not hold for "
+        "every plant.")
+    m.p("The two governance elements change what the system does, not the labels it "
+        "assigns, so judging them by label accuracy alone would make them look useless. "
+        "Remove the adaptation governor and macro-F1 stays the same, but retraining "
+        "protection drops from "
+        f"{g(full, 'retraining_protection'):.3f} to {g('- adaptation governor', 'retraining_protection'):.3f}, "
+        "meaning every poisoned sample reaches an adaptive element. Remove the "
+        "differential response and containment drops from "
         f"{g(full, 'poison_containment'):.3f} to {g('- differential response', 'poison_containment'):.3f} "
         "and process masking rises from "
         f"{g(full, 'process_masking_rate'):.3f} to {g('- differential response', 'process_masking_rate'):.3f}.")
@@ -542,26 +546,28 @@ def _ablation(m, R):
             rows.append([("Nominal (180-episode bank)" if c.startswith("nominal") else T.SHIFT_LABEL.get(c, c)), f"{pir:.3f}", f"{gen:.3f}", f"{r12[c]['summary']['macro_f1'][0]:.3f}",
                          f"{r12[c]['summary']['false_alarm_rate'][0]:.3f}"])
         t2 = m.table(
-            "Physics features, generic features, and both in one learner (macro-F1). The "
-            "combined learner keeps PIRCAD's governance and response.",
+            "Macro-F1 with physics features only, generic features only, and the two "
+            "combined in a single learner. The combined learner uses PIRCAD's governance "
+            "and response unchanged.",
             ["Condition", "PIRCAD (physics)", "Generic-feature RF", "PIRCAD (physics + generic)",
              "False alarm, combined"], rows, widths=[4.0, 2.6, 2.6, 3.2, 2.6])
         nom = r12[e12["conditions"][0]]["summary"]["macro_f1"][0]
         noise = r12["noise x3"]["summary"]["macro_f1"][0]
-        m.p(f"Table {t2} asks whether the two feature families are complementary. In "
-            f"distribution the combined learner reaches {nom:.3f}, "
+        m.p(f"Table {t2} tests whether the two kinds of feature complement each other. "
+            f"On the nominal bank the combined learner scores {nom:.3f}, "
             + ("closing the gap to the generic forest; " if nom >= R["e6"]["summary"]["Generic-feature RF"]["macro_f1"]["mean"] - 0.01
                else "between the two; ")
-            + f"under the strongest noise shift it reaches {noise:.3f}, "
+            + f"but with the strongest noise shift it falls to {noise:.3f}, "
             + ("so it inherits the robustness of the physics features"
                if noise >= R["worst8"]["PIRCAD"][1] - 0.05 else
                "so it inherits the fragility of the generic features")
-            + ". Adding data-driven features to a physics-anchored learner is therefore "
-            "a trade-off along the same axis as the comparison itself, not a free "
-            "improvement.")
+            + ". Mixing data-driven features into a physics-anchored learner thus buys "
+            "in-distribution accuracy at the price of robustness, the same trade-off seen "
+            "in the main comparison, rather than giving a gain for free.")
     m.figure(FIG / "v2_fig_ablation.png",
-             "Ablation (mean, 95 % CI). (a) Macro-F1; (b) forwarded error on the "
-             "target channel. The dotted line marks the full system.", 15.5)
+             "Results of removing one element at a time (mean, 95 % CI): (a) macro-F1 "
+             "and (b) forwarded error on the target channel. The dotted line shows the "
+             "complete system.", 15.5)
 
 
 def _edge(m, R):
@@ -604,16 +610,17 @@ def discussion_and_conclusion(m, R):
         "we started with. PIRCAD is **not** a more accurate classifier than a strong "
         "data-driven learner trained on the same distribution: in simulation the CNN and "
         "the generic forest match or beat it, and on real data they beat it clearly. "
-        "What a physics-anchored, cause-aware learner offers is different in kind:")
+        "Its advantages lie elsewhere:")
     m.bullets([
-        "**Bounded worst case under shift — in simulation.** Every data-driven learner "
-        "had a simulated shift under which it collapsed (worst macro-F1 "
-        f"{w['Generic-feature RF'][1]:.2f} and {w['Multi-scale 1D-CNN'][1]:.2f}); PIRCAD's "
-        f"worst case was {w['PIRCAD'][1]:.2f}, provided its process model is reasonably "
-        "accurate. On the real deployment the CNN was unaffected by the noise shift we "
-        "could apply, so this advantage is not yet established on real data.",
-        "**The ability to act on a verdict.** Correcting a drifting sensor requires an "
-        "estimate of its bias against something it cannot influence. A label-only "
+        "**Bounded worst case under shift — in simulation.** In simulation, each "
+        "data-driven learner failed badly under some shift (lowest macro-F1 "
+        f"{w['Generic-feature RF'][1]:.2f} and {w['Multi-scale 1D-CNN'][1]:.2f}), whereas "
+        f"PIRCAD never fell below {w['PIRCAD'][1]:.2f} as long as its process model was "
+        "reasonably good. On the real deployment, however, the noise shift we could "
+        "apply did not affect the CNN, so this advantage still has to be shown on real "
+        "data.",
+        "**The ability to act on a verdict.** To correct a drifting sensor, you need an "
+        "estimate of its bias taken against a reference the sensor cannot affect. A label-only "
         "system can only withhold what it flags; on benign drift PIRCAD delivered "
         f"{e7['drift (reference)']['PIRCAD']['summary']['useful_frac'][0]*100:.0f} % of the "
         "channel within tolerance against "
@@ -659,8 +666,8 @@ def discussion_and_conclusion(m, R):
         "fallback forced an uncertain verdict to full confidence, so a 0.3-confidence "
         "poisoning guess latched quarantine. On real data this turned a classifier that "
         "mostly called drift correctly into one that reported poisoning for most of each "
-        "drift episode. Uncertain poisoning verdicts now hold the sample without "
-        "latching.",
+        "drift episode. Now, a poisoning verdict with low confidence only holds back that "
+        "sample and does not trigger a latched quarantine.",
     ])
     m.p("All three made the system look better or worse than it was in ways that a "
         "label-accuracy table on a small, one-sided bank cannot reveal. We report them "
