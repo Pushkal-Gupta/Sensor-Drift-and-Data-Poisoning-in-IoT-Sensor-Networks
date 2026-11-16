@@ -51,4 +51,23 @@ REFS = {
     "mo2009": "Y. Mo, B. Sinopoli, Secure control against replay attacks, in: Proc. 47th Annu. Allerton Conf. Commun. Control Comput., IEEE, 2009, pp. 911–918. https://doi.org/10.1109/ALLERTON.2009.5394956",
     "isermann2005": "R. Isermann, Model-based fault-detection and diagnosis – status and applications, Annu. Rev. Control 29 (2005) 71–85. https://doi.org/10.1016/j.arcontrol.2004.12.002",
     "liu2026calib": "L. Liu, Q. Zhang, K.G. Shin, Adversarial calibration attack on autonomous vehicles, arXiv preprint arXiv:2608.28778, 2026. https://doi.org/10.48550/arXiv.2608.28778",
+    # ------------------------------------- recent works added at first submission
+    # (they replaced foundational entries one-for-one in the submitted list; in the
+    # revision both are kept and each is cited where its content is the evidence)
+    "mahdi2024": "O.A. Mahdi, N. Ali, E. Pardede, A. Alazab, T. Al-Quraishi, B. Das, Roadmap of concept drift adaptation in data stream mining, years later, IEEE Access 12 (2024) 21129–21146.",
+    "abedzadeh2025": "S. Abedzadeh, S. Bhattacharjee, Mitigating impact of data poisoning attacks on CPS anomaly detection with provable guarantees, Information 16 (2025) 428.",
+    "jiang2025": "Q. Jiang, Y. Zu, Z. Zhu, W. Zhong, Y. Xu, Z. Qian, X. Zhang, Dynamic stealthy backdoor attack against anomaly detectors in industrial control systems, Inf. Sci. (2025) 123066.",
+    "rodriguez2025": "M. Rodríguez, D.P. Tobón, D. Múnera, A framework for anomaly classification in Industrial Internet of Things systems, Internet Things 29 (2025) 101446.",
+    "talayoglu2025": "B. Talayoglu, J. Vande Velde, B. da Silva, Lightweight AI for sensor fault monitoring, Electronics 14 (2025) 4532.",
+    "cao2025iso": "Y. Cao, H. Xiang, H. Zhang, Y. Zhu, K.M. Ting, Anomaly detection based on isolation mechanisms: a survey, Mach. Intell. Res. 22 (2025) 849–865.",
+    "nwachukwu2026": "U. Nwachukwu, D.O. Aikhuele, S. Sorooshian, Dynamic concept drift detection using an integrated machine learning model with error-based Page-Hinkley test for enhanced predictive accuracy in adhesive manufacturing process, Open Eng. 16 (2026) 20250158.",
+    "irfan2024": "M. Irfan, A. Sadighian, A. Tanveer, S.J. Al-Naimi, G. Oligeri, A survey on detection and localisation of false data injection attacks in smart grids, IET Cyber-Phys. Syst. Theory Appl. 9 (2024) 313–333.",
+    "zhao2024replay": "D. Zhao, B. Yang, Y. Li, H. Zhang, Replay attack detection for cyber-physical control systems: a dynamical delay estimation method, IEEE Trans. Ind. Electron. 72 (2024) 867–875.",
+    "cao2026causal": "L. Cao, Y. Wang, Y. Qin, Y. Cao, B. Gopaluni, R.D. Braatz, Attack detection for cyber-physical systems based on causal representation, IEEE Trans. Syst. Man Cybern. Syst. (2026).",
+    "sheikhi2026": "M.A. Sheikhi, G.D.A. Gleizer, T. Keviczky, P.M. Esfahani, Fault diagnosis in dynamical systems: geometric interpretation and tractable algorithms, Annu. Rev. Control Robot. Auton. Syst. 9 (2026).",
+    "ferreira2026": "A.P. Ferreira, C. Azorin-Molina, L. Gimeno, Biases and uncertainties in radiosonde-based precipitable water vapor, Earth Space Sci. 13 (2026) e2026EA005075.",
+    "aly2025": "M. Aly, M.H. Behiry, Enhancing anomaly detection in IoT-driven factories using Logistic Boosting, Random Forest, and SVM: a comparative machine learning approach, Sci. Rep. 15 (2025) 23694.",
+    "oliva2026": "G. Oliva, B. Mazzá, R. Setola, An innovation-based approach to detect stealthy disturbance attacks in maritime monitoring, Control Eng. Pract. 173 (2026) 107017.",
+    "saunders2025": "J.D. Saunders, A.A. Freitas, Automated machine learning for positive-unlabelled learning, Appl. Intell. 55 (2025) 875.",
+    "tarish2026": "H.A. Tarish, R. Hassan, K.A.Z. Ariffin, M.M. Jaber, Leakage-free evaluation of task-aware Nyström sampling for IoMT intrusion detection, Front. Artif. Intell. 9 (2026) 1957727.",
 }

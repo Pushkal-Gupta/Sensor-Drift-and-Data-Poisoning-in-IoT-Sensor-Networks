@@ -129,6 +129,61 @@ def test_single_drift_verdict_never_releases_quarantine():
     assert g.state("T") is ChannelState.QUARANTINED
 
 
+# ---------------------------------------------------------------------------
+# Regression tests for the three defects of Section 7.2 (added in revision)
+# ---------------------------------------------------------------------------
+def test_training_bank_is_polarity_balanced():
+    """Defect 1: every training episode must appear in both polarities."""
+    sys.path.insert(0, str(ROOT / "experiments"))
+    from v2_common import eval_specs, train_specs
+    tr = train_specs()
+    for sc in {s.scenario for s in tr}:
+        signs = [s.sign for s in tr if s.scenario == sc]
+        assert signs.count(1) == signs.count(-1), (sc, signs)
+    ev = eval_specs()
+    for sc in {s.scenario for s in ev}:
+        signs = [s.sign for s in ev if s.scenario == sc]
+        assert signs.count(1) == signs.count(-1), (sc, signs)
+
+
+class _ConstantClassifier:
+    """Always returns the same verdict -- isolates the governance logic."""
+
+    def __init__(self, cause, confidence):
+        self.cause, self.confidence = cause, confidence
+
+    def classify(self, channel, feats, loc):
+        from pircad.rootcause import RootCauseResult
+        return RootCauseResult(self.cause, self.confidence, {self.cause: self.confidence})
+
+
+def _run_constant(cause, confidence, scenario="drift"):
+    from pircad.fognode import PIRCADFogNode
+    from pircad.governor import ChannelState
+    from pircad.simulator import frames
+    ep = make_episode_v2(scenario, n=3000, seed=7, onset=1200, rate=2.0e-3)
+    node = PIRCADFogNode(classifier=_ConstantClassifier(cause, confidence))
+    res = node.run(frames(ep), truth_labels=ep.labels)
+    return node, res, ChannelState
+
+
+def test_uncertain_poison_verdict_never_latches_quarantine():
+    """Defect 3: a low-confidence POISON verdict holds samples but cannot quarantine."""
+    node, res, CS = _run_constant(RootCause.DATA_POISONING, 0.30)
+    assert node.gov.state("T_in") is not CS.QUARANTINED
+    held = [d for d in res.per_channel["T_in"] if not d.forwarded and d.k > 1300]
+    assert held, "uncertain poisoning verdicts should still hold the sample"
+
+
+def test_confident_poison_verdict_latches_and_containment_follows_governor():
+    """Defect 2: once quarantined, nothing is forwarded, whatever the latest verdict."""
+    node, res, CS = _run_constant(RootCause.DATA_POISONING, 0.95)
+    assert node.gov.state("T_in") is CS.QUARANTINED
+    d = res.per_channel["T_in"]
+    first_q = next(x.k for x in d if not x.forwarded and x.k > 1000)
+    assert not any(x.forwarded for x in d[first_q + 1:]), "quarantined channel forwarded data"
+
+
 def _main() -> int:
     fns = [(k, v) for k, v in sorted(globals().items())
            if k.startswith("test_") and callable(v)]

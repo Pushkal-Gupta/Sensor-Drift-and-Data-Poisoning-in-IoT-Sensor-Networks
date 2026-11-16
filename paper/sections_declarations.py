@@ -24,8 +24,11 @@ def declarations(m):
         "propositions, implemented the fog pipeline, the attack and scenario "
         "generators, all comparison systems and the edge kernel, designed and ran every "
         "experiment, carried out the statistical analysis and the Intel Lab study, "
-        "identified and fixed the three defects reported in Section 7.2, produced all "
-        "figures and wrote the manuscript.")
+        "identified and fixed the three defects reported in Section 7.3, produced all "
+        "figures and wrote the manuscript. [[AUTHORS: state here the specific "
+        "contributions of Shridhar M, V. Kaushik and S. Veeragandham (for example: who "
+        "built the Wokwi/ESP32 node, who reviewed or re-ran which experiments, who "
+        "checked the statistics), since Reviewer 1 asked how the work was divided.]]")
     m.h1("Declaration of competing interest")
     m.p("The authors declare that they have no known competing financial interests or "
         "personal relationships that could have appeared to influence the work reported "
@@ -40,8 +43,18 @@ def declarations(m):
         f"table and figure, and the regression tests — is available at {REPO}.")
     m.h1("Declaration of generative AI and AI-assisted technologies in the "
          "manuscript preparation process")
-    m.p("During the preparation of this work the authors used Claude (Anthropic) to "
-        "assist with software development, the execution of the experiments, and "
-        "drafting and editing of the manuscript. After using this tool, the authors "
+    m.p("During the preparation of this work the authors used Claude (Anthropic), a "
+        "large language model, as a programming and writing assistant. "
+        "[[AUTHORS: confirm or correct this division of labour before submission. The "
+        "research question, the threat model, the propositions, the design of every "
+        "experiment and the decision of which results to report were the authors'. Under "
+        "the authors' direction, Claude wrote and refactored parts of the code (the fog "
+        "pipeline, the comparison systems and the experiment scripts), executed the "
+        "experiment scripts, and drafted and edited passages of the original manuscript "
+        "and of this revision, including the new analyses requested by the reviewers. "
+        "The authors reviewed the code, checked every reported number against the "
+        "released artifacts, and revised the text.]] Every number in the paper is "
+        "produced by released scripts from released per-episode artifacts, so the "
+        "analysis can be audited independently. After using this tool, the authors "
         "reviewed and edited the content as needed and take full responsibility for the "
         "content of the published article.")

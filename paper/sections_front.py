@@ -1,4 +1,4 @@
-"""Front matter and Sections 1-5 (no result-dependent numbers live here)."""
+"""Front matter and Sections 1-5 (the few result-dependent numbers come from R)."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 
-TITLE = ("Ageing or Attack? Cause-Aware Learning for Safe Self‑Calibration Under "
+TITLE = ("Ageing or Attack: Cause-Aware Learning for Safe Self‑Calibration Under "
          "Disguised Sensor Poisoning")
 # Author block laid out as in the authors' original draft (Paper.docx).
 AUTHORS = ("Pushkal Gupta^{1}, Shridhar M^{2}, Vanka Kaushik^{3}, "
@@ -24,171 +24,220 @@ KEYWORDS = ("Sensor drift; Data poisoning; Self-calibration; Root-cause "
 
 
 def methods(m, R):
-    """Sections 1-5.  `R` carries the few headline numbers the introduction quotes."""
+    """Sections 1-5.  `R` carries the few numbers these sections quote."""
+    ref = R.get("e14ref")
     # ================================================================ 1
     m.h1("1. Introduction")
     m.p("Networked sensing underpins industrial monitoring, building automation and "
         "environmental observation, and every analytic, control decision and safety "
         "interlock computed downstream inherits the trustworthiness of the stream it is "
-        "given {cite:mishra2024,xing2024}. That stream is produced by large populations "
-        "of cheap, unattended transducers, and it goes bad for two very different "
-        "reasons. Transducers age: their output acquires a slow, smooth bias, and a "
-        "drifting sensor is still a working instrument that should be recalibrated "
-        "rather than discarded {cite:ahmad2024,schaller2025}. And streams are attacked: "
-        "false-data injection fabricates readings that are individually plausible "
-        "{cite:xing2024,shen2024}, and acoustic or thermal injection at the transducer "
-        "itself bypasses every cryptographic protection on the link "
+        "given {cite:mishra2024,xing2024}. In practice these streams come from many "
+        "low-cost transducers left to run unattended, and their readings can become "
+        "wrong for two quite different reasons. The first is ageing. Over time a "
+        "transducer picks up a slow, smooth offset, yet it keeps measuring the process, "
+        "so the right action is to recalibrate it, not to throw it away "
+        "{cite:ahmad2024,schaller2025,ferreira2026}. The second is attack. False-data "
+        "injection produces values that each look reasonable on their own "
+        "{cite:xing2024,shen2024,irfan2024}, and acoustic or thermal tampering at the "
+        "sensor itself happens before any encryption on the link can help "
         "{cite:sahu2025,ino2024,morand2024}.")
-    m.p("The two causes call for opposite responses, yet they can be made to look "
-        "identical. A bias that grows by a few hundredths of a degree per minute is "
-        "exactly what an ageing thermistor produces and exactly what a patient attacker "
-        "produces. This matters because modern IoT pipelines *adapt*: they recalibrate "
-        "against their own accepted data {cite:ahmad2024}, re-estimate baselines and "
-        "thresholds {cite:lee2025}, and detect and absorb concept drift to suppress "
-        "false alarms {cite:xu2024,gama2014}. An adaptive element that treats every "
-        "slow, persistent deviation as benign drift will absorb an injection shaped like "
-        "drift into its own reference, and the damage outlasts the attack: once the "
-        "reference has moved, genuine faults are under-reported. This has been shown "
-        "against drift-adaptive detectors in industrial control "
-        "{cite:kravchik2021,kravchik2022} and, physically, by acoustically poisoning the training data of an on-device "
-        "anomaly detector until the machine fault it existed to detect became "
-        "invisible {cite:ino2024}.")
+    m.p("Ageing and attack need opposite responses, but an attacker can make one look "
+        "like the other. An offset that rises by a few hundredths of a degree each "
+        "minute is what an old thermistor does, and it is also what a careful attacker "
+        "would inject. The problem is sharpened by the fact that IoT pipelines now "
+        "*adapt*. They recalibrate on the data they have accepted {cite:ahmad2024}, "
+        "update their baselines and thresholds {cite:lee2025}, and absorb concept drift "
+        "so that it stops raising alarms {cite:xu2024,gama2014,mahdi2024}. An adaptive "
+        "element that treats every slow, persistent deviation as benign drift will "
+        "absorb an injection shaped like drift into its own reference, and the damage "
+        "outlasts the attack: once the reference has moved, genuine faults are "
+        "under-reported. This has been shown against drift-adaptive detectors in "
+        "industrial control {cite:kravchik2021,kravchik2022,jiang2025} and, physically, "
+        "by acoustically poisoning the training data of an on-device anomaly detector "
+        "until the machine fault it existed to detect became invisible {cite:ino2024}.")
     m.p("The dominant machine-learning formulation does not pose the question that "
         "would prevent this. Time-series anomaly detectors emit a score or a flag "
         "{cite:darban2025,yap2024,reis2025}; drift detectors emit a change point "
         "{cite:gama2014}. Neither carries a vocabulary of *causes*, so a system built on "
         "them has nothing on which to condition its response, and it does the same "
         "thing whatever the reason for the deviation. Recent work has begun to separate "
-        "faults from attacks {cite:liu2025,hu2024,shen2024,shukla2023} and adversarial "
-        "from real concept drift {cite:korycki2023}, but only between hypotheses that differ "
-        "in their signature at the plant, not against an injection deliberately matched "
-        "to benign ageing; and none of it closes the loop from the verdict to *which "
-        "adaptive elements may learn from the data*.")
+        "faults from attacks {cite:liu2025,hu2024,shen2024,shukla2023,rodriguez2025} and "
+        "adversarial from real concept drift {cite:korycki2023}, but only between "
+        "hypotheses that differ in their signature at the plant, not against an "
+        "injection deliberately matched to benign ageing; and none of the works we "
+        "examined closes the loop from the verdict to *which adaptive elements may learn "
+        "from the data*.")
     m.p("This paper treats the problem as one of **cause-aware learning under "
         "adversarial distribution shift**. We ask a fog-layer learner to decide, for "
         "every deviation, whether it is benign transducer drift, data poisoning, or a "
         "genuine excursion of the monitored process; and to let that verdict gate every "
         "element that adapts. The approach, PIRCAD (physics-anchored root-cause "
         "attribution with adaptation governance), rests on one structural idea: each "
-        "channel is judged against an expectation that it cannot influence. A "
-        "leave-one-channel-out (dedicated-observer) estimator anchored on the other "
-        "instruments and on the process physics produces a residual in which a slow "
-        "bias appears at full amplitude, and whose *character* — not its size or rate — "
-        "differs between a drifting transducer that still observes the real process and "
-        "a substituted stream that does not.")
+        "channel is judged against an expectation that it cannot influence. For each "
+        "channel we build that expectation from the other instruments and the process "
+        "physics only (a leave-one-channel-out, or dedicated-observer, estimator). A "
+        "slow bias on the channel then shows up in the residual at its full size. Size "
+        "and rate cannot tell ageing from attack, but the *character* of the residual "
+        "can: a drifting transducer still sees the real process, while a substituted "
+        "stream does not.")
     m.p("The contributions are:")
     m.bullets([
         "**A formulation and threat model** for drift-versus-poisoning attribution in "
         "which the adversary matches benign ageing in magnitude and rate, organised as "
-        "a hierarchy of attacker knowledge. We state the limit of the problem "
-        "explicitly: an on-path attacker that adds a ramp to the genuine signal is "
-        "observationally equivalent to drift on the attacked channel (Proposition 1), "
-        "and we show that a physics-anchored, bounded correction nevertheless bounds "
-        "the damage such an attacker can do (Proposition 2).",
-        "**A physics-anchored root-cause learner**: leave-one-out residuals, a compact "
-        "set of residual-character features, and a localisation of physical-constraint "
-        "violations whose hypothesis signatures come from perturbing the model rather "
-        "than from labelled faults. The learner is back-end agnostic; we report five.",
-        "**Adaptation governance**: a per-channel state machine that withholds suspect "
-        "data from every adaptive element, with a cause-dependent response — bounded "
-        "recalibration for drift, quarantine for poisoning, forward-and-alarm for "
-        "process events — and a rule that no irreversible action (quarantine) is "
-        "taken on an uncertain verdict, so that one misclassification cannot lock a "
-        "serviceable sensor out of correction.",
-        "**A statistically powered evaluation** against supervised deep and "
-        "feature-based learners, unsupervised detectors and tuned self-calibrating "
-        "estimators: 30 held-out seeds with paired tests, an attacker-capability sweep, "
-        "eleven distribution-shift conditions without retraining, an end-to-end "
-        "safety experiment, and a real-data study on the Intel Berkeley Research Lab "
-        "deployment with sensor-disjoint train and test splits {cite:intel2004}.",
-        "**Reproducibility**: all code, the attack generators and the scripts that "
-        "produce every number and figure are released; Section 7.2 also documents three "
-        "defects that the stronger evaluation exposed in our own earlier pipeline, and "
-        "their fixes.",
+        "a hierarchy of attacker knowledge, with its limits stated explicitly: an "
+        "on-path attacker is indistinguishable from drift on the attacked channel "
+        "(Observation 1), so for that attacker the attribution task is ill-posed and "
+        "only the consequence of the verdict can be controlled; and a bounded "
+        "correction against a channel-independent reference bounds the forwarded "
+        "error *relative to the error of that reference*, whereas a reference that "
+        "uses the channel leaves a fixed fraction of the bias uncorrected "
+        "(Proposition 2).",
+        "**Adaptation governance**, the main contribution: a per-channel state machine "
+        "that withholds suspect data from every adaptive element, with a "
+        "cause-dependent response — bounded recalibration for drift, quarantine for "
+        "poisoning, forward-and-alarm for process events — and a rule that no "
+        "irreversible action is taken on an uncertain verdict. We evaluate it by its "
+        "effect on a downstream safety function, under three attackers, a range of "
+        "attack rates, durations and alarm thresholds, and against self-calibrating "
+        "estimators swept over their own tuning parameter.",
+        "**A physics-anchored root-cause learner** that supplies the verdict: "
+        "leave-one-out residuals, residual-character features, and a localisation of "
+        "physical-constraint violations whose signatures come from perturbing the "
+        "model rather than from labelled faults. It is not more accurate than strong "
+        "data-driven classifiers, and we report where it is less accurate.",
+        "**An evaluation that reports its negative results**: 30 held-out seeds with "
+        "paired tests and effect sizes, an attacker-capability sweep, eleven "
+        "distribution shifts, a semi-synthetic study on real Intel Berkeley Research "
+        "Lab streams with mote-disjoint splits {cite:intel2004}, in which supervised "
+        "learners are the better classifiers, and three defects that the evaluation "
+        "exposed in our own earlier pipeline (Section 7.3). All code, generators and "
+        "scripts are released.",
     ])
+    m.p("**Scope of the claims.** The governance results and the attacker sweep are "
+        "obtained on a simulated plant whose physics the defender knows to within a "
+        "few per cent. On real data the evidence is weaker: the root-cause learner is "
+        "less accurate than a supervised CNN, the robustness to a noise shift seen in "
+        "simulation does not carry over, and the correction is only as good as a "
+        "real-data expectation whose error we measure (Section 6.6). No public dataset "
+        "contains labelled real ageing alongside real attacks, so neither the safety "
+        "result nor the drift-versus-poisoning attribution has been tested on "
+        "unlabelled field ageing. The paper's claim is therefore conditional: *given* a "
+        "reference the channel cannot influence, cause-gated adaptation keeps a "
+        "safety function working under ageing-shaped poisoning, where self-calibration "
+        "without such a gate does not.")
     m.p("Section 2 reviews related work. Section 3 formalises the problem and the "
-        "threat model. Section 4 describes the method, Section 5 the experimental "
-        "design, and Section 6 the results. Section 7 discusses limitations and threats "
-        "to validity, and Section 8 concludes.")
+        "threat model. The method is given in Section 4 and the experimental design in "
+        "Section 5, and Section 6 presents the results. Section 7 discusses what the "
+        "evidence supports, how the method's sensitivities can be mitigated, and the "
+        "limitations; Section 8 concludes.")
 
     # ================================================================ 2
     m.h1("2. Related work")
     m.p("Fog-, edge- and on-device anomaly detection place lightweight learners next "
-        "to the sensors {cite:reis2025,yap2024}, and deep time-series anomaly "
-        "detection has been surveyed comprehensively {cite:darban2025}; work on the "
-        "decision stage makes thresholds adaptive and uncertainty-aware {cite:lee2025}. "
-        "Isolation-based scoring {cite:liu2008iforest} and sequential change detection "
-        "{cite:page1954} remain the low-cost workhorses. These methods improve the "
-        "score, not its semantics: the output is a single anomaly label, so there is "
-        "nothing on which to condition a cause-specific response.",
+        "to the sensors {cite:reis2025,yap2024,talayoglu2025}, and deep time-series "
+        "anomaly detection has been surveyed comprehensively {cite:darban2025}; work on "
+        "the decision stage makes thresholds adaptive and uncertainty-aware "
+        "{cite:lee2025}. Isolation-based scoring {cite:liu2008iforest,cao2025iso} and "
+        "sequential change detection {cite:page1954,nwachukwu2026} remain the low-cost "
+        "workhorses. These methods improve the score, not its semantics: the output is "
+        "a single anomaly label, so there is nothing on which to condition a "
+        "cause-specific response.",
         lead="Anomaly and change detection.")
     m.p("Field recalibration of low-cost sensor networks {cite:ahmad2024} and "
         "learned drift compensation {cite:schaller2025} treat slow, persistent, "
         "one-directional bias as something to absorb — correctly, when the cause "
-        "really is ageing — and drift-aware IoT detectors adapt to configuration "
-        "changes to suppress false positives {cite:xu2024}; concept-drift adaptation "
-        "more broadly is surveyed in {cite:gama2014}. None of this literature carries "
-        "an adversarial hypothesis, so absorbing an injection shaped like ageing lies "
-        "outside its threat model.",
+        "really is ageing. Concept-drift adaptation more broadly is surveyed in "
+        "{cite:gama2014,mahdi2024}. The closest adaptive IoT detector, by Xu et al. "
+        "{cite:xu2024}, detects concept drift in the stream, interprets which features "
+        "moved, and then updates the anomaly model so that the new regime stops "
+        "raising false positives. It therefore *does* condition adaptation on an "
+        "analysis of the deviation, but the analysis asks whether the data "
+        "distribution has changed, not why: an attacker who produces a gradual, "
+        "persistent shift supplies exactly the evidence that triggers the update. "
+        "None of these mechanisms carries an adversarial hypothesis, so absorbing an "
+        "injection shaped like ageing lies outside their threat model.",
         lead="Drift compensation and adaptation.")
-    m.p("Stealthy false-data injection against state estimation {cite:liu2009fdi} "
-        "and replay attacks {cite:mo2009} define the classical adversary; surveys "
-        "review detectors {cite:xing2024}, and random-matrix methods separate injection "
-        "from replay {cite:shen2024}. Learned detectors are themselves attackable: "
-        "detectors that predict each sensor from the others can be evaded "
-        "{cite:ghafouri2018}, and gradient-crafted injections are misclassified as "
-        "legitimate faults {cite:saber2025}. Most directly relevant to this paper, "
-        "detectors retrained online to follow drift can be poisoned by fake sensor "
-        "signals so that later attacks go undetected {cite:kravchik2021,kravchik2022}; "
-        "drift detectors can be evaded by adversarially constructed drift "
-        "{cite:hinder2025}; on-device learners have been poisoned physically "
-        "{cite:ino2024}; and thermal attacks have exploited the temperature-dependent "
-        "internal calibration of low-cost pollution sensors {cite:morand2024}. "
-        "Outside IoT, a physical attack on autonomous vehicles first triggers "
-        "camera–LiDAR online recalibration and then steers the estimate "
+    m.p("Stealthy false-data injection against state estimation "
+        "{cite:liu2009fdi,irfan2024} and replay attacks {cite:mo2009,zhao2024replay} "
+        "define the classical adversary; surveys review detectors {cite:xing2024}, and "
+        "random-matrix methods separate injection from replay {cite:shen2024}. Learned "
+        "detectors are themselves attackable: detectors that predict each sensor from "
+        "the others can be evaded {cite:ghafouri2018}, and gradient-crafted injections "
+        "are misclassified as legitimate faults {cite:saber2025}. Most directly "
+        "relevant to this paper, detectors retrained online to follow drift can be "
+        "poisoned by fake sensor signals so that later attacks go undetected "
+        "{cite:kravchik2021,kravchik2022}, stealthy backdoors can be planted in "
+        "industrial anomaly detectors {cite:jiang2025}, and poisoning of CPS anomaly "
+        "detectors can be bounded only under assumptions on the poisoned fraction "
+        "{cite:abedzadeh2025}; drift detectors can be evaded by adversarially "
+        "constructed drift {cite:hinder2025}; on-device learners have been poisoned "
+        "physically {cite:ino2024}; and thermal attacks have exploited the "
+        "temperature-dependent internal calibration of low-cost pollution sensors "
+        "{cite:morand2024}. Outside IoT, a physical attack on autonomous vehicles first "
+        "triggers camera–LiDAR online recalibration and then steers the estimate "
         "{cite:liu2026calib} — the same exploit of a self-calibrating element. "
         "Poisoning defences for federated learners {cite:yang2024} protect a training "
         "corpus, not the calibration offsets and normalisation statistics of a fog "
         "pipeline.",
         lead="Attacks on sensing and on adaptive learners.")
     m.p("Model-based diagnosis generates residuals against a process model and "
-        "exploits analytical redundancy {cite:isermann2005}; observer-based residuals "
-        "remain effective for data-efficient diagnosis {cite:ullah2025}. "
-        "Physics-informed learning brings known laws into anomaly detection "
-        "{cite:wu2024,zideh2024}, invariant rules among process variables detect "
-        "attacks in industrial control {cite:zhu2025}, and digital twins act as "
-        "observers {cite:sayghe2025,kallesoe2024}. The nearest edge system, PhySec-Edge, "
-        "combines process-model residuals, Kalman estimation and cross-sensor checks "
-        "with learned detectors {cite:radovanovic2026}; it detects attack classes, but "
-        "benign ageing is not among its hypotheses and the residual is not used to "
-        "select a response.",
+        "exploits analytical redundancy {cite:isermann2005,sheikhi2026}; observer-based "
+        "residuals remain effective for data-efficient diagnosis {cite:ullah2025}. "
+        "This literature *does* pair diagnosis with a cause-specific response: once a "
+        "fault is isolated, fault-tolerant control accommodates it, for example by "
+        "re-weighting or reconstructing the faulty measurement. PIRCAD borrows that "
+        "structure. Two things differ. First, the hypothesis set: observer banks "
+        "isolate *which* component deviates, and an additive sensor bias is one "
+        "hypothesis whether it comes from ageing or from an attacker, so the two are "
+        "accommodated identically — Observation 1 shows that, for an on-path attacker, "
+        "no observer can do better. Our hypothesis set separates benign ageing from "
+        "injections matched to it wherever the stream's character allows. Second, the "
+        "object of the response: accommodation changes the control law, whereas we "
+        "gate the *learning* elements of a data pipeline (calibration offsets, "
+        "residual statistics, model anchoring), which a fault-tolerant controller does "
+        "not have to protect. Physics-informed learning brings known laws into anomaly "
+        "detection {cite:wu2024,zideh2024}, invariant rules and causal representations "
+        "of process variables detect attacks in industrial control "
+        "{cite:zhu2025,cao2026causal}, innovation tests on a Kalman filter detect "
+        "stealthy disturbances {cite:kalman1960,oliva2026}, and digital twins act as "
+        "observers {cite:sayghe2025,kallesoe2024}. The nearest edge system, PhySec-Edge "
+        "{cite:radovanovic2026}, combines process-model residuals, Kalman estimation and "
+        "cross-sensor checks with learned detectors. As described, its hypotheses are "
+        "attack classes; benign ageing is not among them, and the residual is used to "
+        "detect, not to select a response or to gate adaptation.",
         lead="Physics-informed and model-based detection.")
     m.p("The closest work in objective separates which *kind* of anomaly occurred: "
         "attacks from faults in interconnected cyber-physical systems {cite:liu2025}, "
         "replay attacks from sensor faults {cite:hu2024}, malicious anomalies from "
-        "sensor faults and genuine events with an ensemble pipeline {cite:shukla2023}, "
-        "and adversarial from real concept drift in generic data streams "
-        "{cite:korycki2023}. Table 1 positions these against PIRCAD. Three properties "
-        "are, to our knowledge, not combined elsewhere: an injection matched to benign "
-        "ageing in *both* magnitude and rate as the decisive hypothesis; attribution "
-        "grounded in physical constraints whose signatures need no labelled faults; and "
-        "the verdict gating *every* adaptive element, evaluated by its end effect on a "
+        "sensor faults and genuine events {cite:shukla2023,rodriguez2025}, and "
+        "adversarial from real concept drift in generic data streams "
+        "{cite:korycki2023}. Table 1 positions these against PIRCAD. Each entry "
+        "reflects our reading of the cited paper's stated hypotheses, response and "
+        "evaluation, not a re-implementation, and the table covers the works cited "
+        "here rather than the result of a systematic review. Within that set, three "
+        "properties are not combined: an injection matched to benign ageing in *both* "
+        "magnitude and rate as the decisive hypothesis; attribution grounded in "
+        "physical constraints whose signatures need no labelled faults; and the "
+        "verdict gating the adaptive elements, evaluated by its end effect on a "
         "downstream safety function rather than by label accuracy alone.",
         lead="Distinguishing faults, attacks and drift.")
     m.table(
-        "Positioning against the closest prior work. ✓ = addressed; ~ = partially; – = not addressed.",
+        "Positioning against the closest prior work, from each paper's stated "
+        "hypotheses, response and evaluation. ✓ = addressed; ~ = partially; – = not "
+        "addressed.",
         ["Work", "Ageing-matched attack as hypothesis", "Drift / attack / process event",
          "Physics-grounded attribution", "Cause-dependent response", "Gates adaptation",
          "Real data"],
         [
             ["Drift compensation {cite:ahmad2024,schaller2025}", "–", "drift only", "–", "recalibrates", "–", "✓"],
-            ["Drift-aware IoT AD {cite:xu2024}", "–", "–", "–", "adapts", "–", "✓"],
+            ["Drift-aware IoT AD {cite:xu2024}", "–", "drift vs. no drift", "–", "adapts on drift", "~ (on drift, not cause)", "✓"],
             ["Poisoning of online ICS detectors {cite:kravchik2021,kravchik2022}", "~ (attack study)", "–", "–", "–", "–", "✓"],
             ["Adversarial vs real drift {cite:korycki2023}", "~", "drift vs adversarial", "–", "–", "~", "✓"],
             ["Fault vs attack {cite:liu2025,hu2024}", "–", "fault vs attack", "✓ (observers)", "–", "–", "–"],
-            ["Malicious vs fault vs event {cite:shukla2023}", "–", "✓", "–", "–", "–", "✓"],
+            ["Model-based FDI / fault-tolerant control {cite:isermann2005,sheikhi2026}", "–", "faults by component", "✓", "✓ (accommodation)", "–", "✓"],
+            ["Malicious vs fault vs event {cite:shukla2023,rodriguez2025}", "–", "✓", "–", "–", "–", "✓"],
             ["PhySec-Edge {cite:radovanovic2026}", "–", "attack classes", "✓", "–", "–", "~"],
-            ["**PIRCAD (this work)**", "**✓ (hierarchy A0–A5)**", "**✓**", "**✓**", "**✓**", "**✓ (all elements)**", "**✓ (semi-synthetic)**"],
+            ["**PIRCAD (this work)**", "**✓ (hierarchy A0–A5)**", "**✓**", "**✓**", "**✓**", "**✓**", "**~ (semi-synthetic)**"],
         ], widths=[3.6, 2.2, 2.2, 2.0, 2.0, 1.8, 1.6], font=8)
 
     # ================================================================ 3
@@ -227,74 +276,129 @@ def methods(m, R):
         "or growth rate is at chance by construction. The levels differ in what the "
         "attacker knows about the live process:")
     m.bullets([
-        "**A0 (stale surrogate).** The attacker substitutes a lagged estimate of the "
-        "process (an exponential moving average with factor 0.02) plus the ramp and "
-        "white noise of the transducer's variance.",
+        "**A0 (stale surrogate).** The attacker replaces the reading with a delayed "
+        "copy of the process (an exponential moving average, factor 0.02), adds the ramp, "
+        "and adds white noise with the same variance as the transducer.",
         "**A1 (noise-matched).** As A0, but the noise reproduces the transducer's "
         "coloured (AR(1)) spectrum.",
         "**A2 (higher fidelity).** The surrogate tracks the live process with smoothing "
         "factor 0.05–0.30.",
-        "**A3 (exact state).** The attacker knows the exact real-time process state "
-        "(factor 1.0) but not the transducer's noise realisation.",
-        "**A4 (on-path).** The attacker sits on the link and adds the ramp to the "
-        "*genuine* reading.",
-        "**A5 (coordinated).** One forged temperature drives every instrument the "
-        "attacker controls (T, P, RH), so the instrument-side physical constraints "
-        "remain satisfied.",
+        "**A3 (exact state).** The attacker has the true process state in real time "
+        "(factor 1.0); only the transducer's own noise is unknown to it.",
+        "**A4 (on-path).** Sitting on the link, the attacker leaves the *genuine* "
+        "reading in place and simply adds the ramp to it.",
+        "**A5 (coordinated).** The attacker controls T, P and RH and derives all three "
+        "from a single forged temperature, so the physical relations between the "
+        "instruments still hold.",
     ])
-    m.p("Two further attack families are not rate-matched: isolated spike "
-        "substitutions and replay of an earlier genuine window. The defender is assumed "
-        "to have a clean commissioning window and a process model of moderate accuracy, "
-        "and the attacker is assumed not to control the inputs u(k) at A0–A4.")
-    m.h2("3.3 What can and cannot be separated")
-    m.p("**Proposition 1 (observational equivalence).** Under A4, with ramp "
-        "b(k) = ρ(k − k_{0}) and |ρ| within the ageing envelope, the distribution of "
-        "the attacked channel's reported sequence is identical to that of the same "
-        "channel under benign drift with b_{i} = b. *Proof.* Both equal "
-        "h_{i}(x(k)) + e_{i}(k) + ρ(k − k_{0}) with the same noise realisation; no "
-        "function of {y_{i}(k)} can separate them, and the other channels are "
-        "untouched in both cases. ∎")
-    m.p("Proposition 1 fixes the frontier of the problem: no detector — physics-based "
-        "or learned — can label A4 correctly from the data alone. What a system *can* "
-        "control is the consequence of mislabelling it.")
-    m.p("**Proposition 2 (bounded harm of anchored correction).** Let the "
+    m.p("We also test two attack families that are not rate-matched: isolated spike "
+        "substitutions, and replay of an earlier genuine window. On the defender's side "
+        "we assume a clean commissioning window and a reasonably accurate process "
+        "model; at levels A0–A4 we assume the attacker cannot touch the inputs u(k).")
+    m.p("**What is not defended.** Three attackers lie outside the guarantees of this "
+        "paper. (i) A5 is *detected but not stopped*: forging every coupled instrument "
+        "consistently makes the deviation look like a process event, which the node "
+        "forwards with an alarm, so the forged values reach the cloud (Section 6.2). "
+        "Section 6.4 shows that it nevertheless cannot corrupt the calibration, "
+        "because a process verdict forbids recalibration; but protecting the values "
+        "themselves needs an instrument outside the attacker's control. (ii) An "
+        "attacker who controls the actuator commands u(k) changes the reference itself. "
+        "(iii) An attacker who adapts to the classifier's gradients or decision "
+        "boundary is not modelled; the A0–A4 attackers know the process, not the "
+        "detector. Against (ii) and (iii) we make no claim.")
+    m.h2("3.3 Limits of separability")
+    m.p("**Observation 1 (observational equivalence).** Let an A4 attacker add the "
+        "ramp b(k) = ρ(k − k_{0}) with |ρ| inside the ageing envelope. The sequence the "
+        "attacked channel reports then has exactly the same distribution as that channel "
+        "would have under benign drift with b_{i} = b. *Proof.* Both equal "
+        "h_{i}(x(k)) + e_{i}(k) + ρ(k − k_{0}) with the same noise realisation, and the "
+        "other channels are untouched in both cases. ∎")
+    m.p("The observation is elementary, and we state it as an observation rather than "
+        "a theorem. Its role is to fix the frontier of the problem. For the A4 "
+        "attacker the attribution task is *ill-posed*: no detector, physics-based or "
+        "learned, can label it correctly from the data alone, and a high attribution "
+        "accuracy reported against such an attacker would indicate a leak in the "
+        "evaluation rather than a capability. The hierarchy is built around this: "
+        "A0–A3 are separable to a degree that depends on what the attacker knows, and "
+        "the experiments measure that degree; A4 is not separable, so for A4 the only "
+        "meaningful evaluation is of the *consequence* of the inevitable "
+        "misattribution, which is what Proposition 2 bounds.")
+    m.p("**Proposition 2 (forwarded error of an anchored correction).** Let the "
         "calibration offset c_{i} be driven only by residuals against an expectation "
         "ŷ_{i}(k | y_{−i}(k), u(k)) that excludes channel i, with per-sample rate limit "
-        "δ and total cap c_{max}. If an A4 ramp b(k) is classified as drift, the "
-        "forwarded corrected value satisfies |y_{i} − c_{i} − h_{i}(x)| ≤ "
-        "|ε_{ref}| + |e_{i}| + max(0, |b| − c_{max}) + L, where ε_{ref} is the "
-        "reference error and L ≤ max(0, |ḃ| − δ)·t the tracking lag. *Proof.* Because the "
-        "expectation excludes channel i, the residual estimates b + ε_{ref}; the "
-        "corrector removes it up to its rate and cap limits. ∎")
-    m.p("Proposition 2 is the reason the response, and not only the classifier, "
-        "matters: an equivalent attack that is (unavoidably) called drift is corrected "
-        "against the physics rather than absorbed into a self-referenced baseline. By "
-        "contrast, a corrector anchored on the channel's own history — a rolling "
-        "mean, an EWMA reference, a Page-Hinkley-triggered recalibration — tracks b and "
-        "leaves the full bias in the forwarded value. Sections 6.2 and 6.4 measure both "
-        "statements.")
+        "δ and total cap c_{max}, and suppose an additive bias b(k) — benign drift, or "
+        "an A4 ramp labelled as drift — is present on channel i. Then the corrected "
+        "value that is forwarded obeys |y_{i} − c_{i} − h_{i}(x)| ≤ |ε_{ref}| + |e_{i}| + "
+        "max(0, |b| − c_{max}) + L, with ε_{ref} = ŷ_{i} − h_{i}(x) the error of the "
+        "reference and L ≤ max(0, |ḃ| − δ)·t the lag of the tracker. *Proof.* The "
+        "expectation does not depend on channel i, so r_{i} = b − c_{i} + e_{i} − "
+        "ε_{ref}; the corrector drives r_{i} towards zero within its rate and cap "
+        "limits, leaving c_{i} − b = e_{i} − ε_{ref} plus the uncorrected excess over "
+        "the cap and the lag. ∎")
+    m.p("**Remark 1 (references that use the channel).** A closed-loop estimator that "
+        "also uses channel i follows the low-frequency content of that channel more "
+        "closely than its high-frequency noise. A slow bias is therefore partly "
+        "absorbed into the estimate, and only a fraction of it appears in the "
+        "residual, while most of the noise remains; the bias's signal-to-noise ratio in "
+        "the residual falls, and with it the speed and reliability of detection and "
+        "correction. A reference built from the channel's own history (a rolling mean "
+        "or an EWMA) is the limiting case in which the bias is absorbed entirely. We "
+        "do not bound the size of the effect analytically, since it depends on the "
+        "estimator's gains; Sections 6.4 and 6.7 measure it.")
+    p_ref = ("" if ref is None else
+             f" In the simulated vessel the leave-one-out reference error on clean data "
+             f"is {ref['sim_abs_eref']['median']:.2f} °C (median; 95th percentile "
+             f"{ref['sim_abs_eref']['p95']:.2f} °C); on the Intel Lab motes the clean "
+             f"residual, which bounds the reference error plus transducer noise, is "
+             f"{ref['intel_abs_residual']['median']:.2f} °C at the median but "
+             f"{ref['intel_abs_residual']['p95']:.2f} °C at the 95th and "
+             f"{ref['intel_abs_residual']['p99']:.1f} °C at the 99th percentile.")
+    m.p("Two points about what Proposition 2 does and does not establish. It is a "
+        "statement *relative to the reference*: it guarantees that the forwarded error "
+        "is no worse than the reference error, not that the reference is good. Where "
+        "the reference is accurate, as in the simulated plant, the bound is tight and "
+        "useful; where it carries unmodelled effects, as in an office whose "
+        "micro-climate depends on sunlight, vents and occupants, the bound is loose, "
+        "and the real-data forwarded error is correspondingly larger." + p_ref +
+        " The proposition therefore does not establish safety in deployments whose "
+        "reference error is unknown; it identifies the reference error as the "
+        "quantity that must be measured before such a claim can be made. Remark 1 "
+        "motivates the leave-one-out design; Section 6.4 tests it by running the safety "
+        "experiment with a shared estimator in place of the dedicated observers, and "
+        "finds no measurable difference in this plant.")
+    m.p("This is also why the response matters as much as the classifier. An attack "
+        "that can only be labelled drift is still corrected against the physics, "
+        "instead of being folded into a baseline built from the channel itself. A "
+        "corrector that follows the channel's own history (a rolling mean, an EWMA "
+        "reference, or recalibration triggered by Page-Hinkley) is the limiting case "
+        "of Remark 1: it follows b, and the whole bias reaches the forwarded value. Both claims are tested in Sections 6.2 and 6.4.")
 
     # ================================================================ 4
     m.h1("4. Method")
     m.figure(HERE / "figures" / "architecture.png",
-             "PIRCAD at the fog node. The expensive stages (E4, E5, E8) run only when "
-             "the cheap trigger E3 fires. The adaptation governor E7 gates every element "
-             "that learns: the process model's state, the residual statistics and the "
-             "calibration offsets.", 15.5)
+             "Structure of PIRCAD on the fog node, with stages numbered in processing "
+             "order. E1 (process model) and E2 (residual and features) run on every "
+             "sample; E3 is a lightweight statistical trigger, and E4 (physical "
+             "localisation), E5 (root-cause learner), E6 (confidence gate and "
+             "escalation) and E8 (differential response) run only after it fires. The "
+             "adaptation governor E7 receives each verdict and decides what every "
+             "learning element may use: the process-model anchoring (E1), the residual "
+             "statistics (E2) and the calibration offsets (E8).", 15.5)
     m.h2("4.1 Leave-one-out physics residuals (E1–E2)")
     m.p("For each channel i the expected value is produced by a dedicated observer "
         "whose state excludes that channel:")
     m.eq("r_{i}(k) = y_{i}(k) − c_{i}(k) − ŷ_{i}(k | y_{−i}(k), u(k))")
     m.p("A single closed-loop estimator that also uses channel i tracks a slow bias "
         "on that channel, so its innovation stays at the noise floor; excluding the "
-        "channel makes the bias appear in r_{i} at full amplitude (with a retrained "
-        "classifier the practical effect is small; Section 6.6). Each observer is "
-        "re-anchored only on channels the governor currently trusts, with weights that "
-        "are slewed rather than switched (a step change in an anchor's weight would "
-        "itself appear as a jump in other channels' residuals). Residual location and "
-        "scale are learned on a clean commissioning window and then frozen: an adaptive "
-        "scale is precisely the handle a slow injection would use to normalise itself "
-        "away.")
+        "channel makes the bias appear in r_{i} at full amplitude (Remark 1). For "
+        "*classification* the difference turns out to be small once the classifier is "
+        "retrained (Section 6.7); its effect is on the correction, which Section 6.4 "
+        "measures. Each observer is re-anchored only on channels the governor currently "
+        "trusts, with weights that are slewed rather than switched (a step change in an "
+        "anchor's weight would itself appear as a jump in other channels' residuals). "
+        "Residual location and scale are learned on a clean commissioning window and "
+        "then frozen: an adaptive scale is precisely the handle a slow injection would "
+        "use to normalise itself away.")
     m.p("In the simulated testbed (Section 5.1) the process is a heated, sealed vessel "
         "with a bang-bang controller, and the observers combine Newtonian heating, the "
         "isochoric ideal-gas law P ∝ T and conservation of absolute humidity through "
@@ -345,67 +449,83 @@ def methods(m, R):
         "violation ḡ, its share of the violation energy and its margin over the "
         "runner-up:")
     m.eq("h* = argmax_{h} ( s_{h}ᵀ ḡ / ‖ḡ‖ )²")
-    m.p("This answers a question orthogonal to drift versus poisoning — is the deviation "
-        "on the instrument side or has the plant moved? — and it is what protects a "
-        "genuine process event from being calibrated away. In the indoor embodiment, "
-        "for example, local heating moves temperature and humidity together at constant "
-        "vapour pressure and leaves the Magnus constraint intact, whereas a transducer "
-        "bias violates it.")
+    m.p("Localisation does not decide between drift and poisoning. It asks a "
+        "different question: did an instrument go wrong, or did the plant itself "
+        "change? Getting this right is what stops a real process event from being "
+        "calibrated out. Indoors, for instance, a local heat source shifts temperature "
+        "and humidity together while vapour pressure stays fixed, so the Magnus "
+        "relation still holds; a biased transducer breaks it.")
     m.h2("4.4 Root-cause learner (E5)")
-    m.p("The feature vector feeds a four-class classifier. Training data are collected "
-        "by running the pipeline with no classifier, so features at training time are "
-        "exactly those at inference time; non-target channels are labelled NORMAL, "
-        "which teaches the learner to stay quiet on collateral triggers. A thin "
-        "physical override is applied in the hybrid embodiment: a confident process-side "
-        "localisation is authoritative for PROCESS (where being wrong is a safety "
-        "issue), and a PROCESS verdict is overruled when the violations localise cleanly "
-        "to the channel itself. The learner is interchangeable; we evaluate a random "
-        "forest {cite:breiman2001} (default), gradient boosting, logistic regression, "
-        "a multilayer perceptron and a training-free rule set. Because a fog node "
-        "classifies one sample at a time, the forest is flattened into arrays and all "
-        "trees are traversed in a single vectorised pass, numerically identical to the "
-        "library implementation (asserted in the test suite) and about 200× faster "
-        "for single samples.")
-    m.h2("4.5 Adaptation governance and differential response (E7–E8)")
-    m.p("Each channel carries a state in {TRUSTED, WATCH, DRIFTING, QUARANTINED, "
-        "RECOVERING}. A channel whose trigger fires leaves TRUSTED immediately, before "
-        "any cause is decided, and from then on contributes reduced weight to the "
-        "process model and nothing to the residual statistics. The response is "
-        "cause-dependent:")
+    m.p("A four-class classifier takes the feature vector as input. To build its "
+        "training set we run the full pipeline with the classifier switched off, which "
+        "guarantees that the features seen in training match those seen at inference. "
+        "Channels other than the target are labelled NORMAL, so the learner learns to "
+        "ignore triggers caused by a neighbour's fault. The hybrid version adds a small "
+        "physical override. When localisation points confidently at the process, the "
+        "verdict is PROCESS, since a mistake there affects safety; when the violations "
+        "point clearly at the channel itself, a PROCESS verdict is rejected. Any "
+        "classifier can be used. We test a random forest {cite:breiman2001,aly2025}, "
+        "gradient boosting, logistic regression, a multilayer perceptron and a rule set "
+        "that needs no training. A fog node classifies samples one at a time, so we "
+        "store the forest as flat arrays and walk all trees in one vectorised pass; the "
+        "output matches the library implementation exactly (the test suite checks "
+        "this).")
+    m.p("**Choice of default back-end.** We select the back-end by the operationally "
+        "dangerous errors of Section 5.4 rather than by macro-F1, because a false-poison "
+        "verdict on a drifting sensor is, under latched quarantine, irreversible: it "
+        "removes a serviceable instrument for the rest of the run. On the simulated "
+        "bank gradient boosting has the higher macro-F1, but it calls drifting samples "
+        "poisoned at a rate of "
+        f"{R['fp_hgb']:.3f} against {R['fp_rf']:.3f} for the random forest (Section 6.1); on "
+        "real data its macro-F1 is also lower (Section 6.6). The random forest is "
+        "therefore the default, and every headline number in this paper refers to it; "
+        "gradient boosting is reported alongside.")
+    m.h2("4.5 Confidence gate, adaptation governance and differential response (E6–E8)")
+    m.p("Every channel is in one of five states: TRUSTED, WATCH, DRIFTING, "
+        "QUARANTINED or RECOVERING. As soon as its trigger fires, a channel drops out of "
+        "TRUSTED, even before a cause has been assigned. From that point it carries less "
+        "weight in the process model and no longer updates the residual statistics. "
+        "What happens next depends on the cause:")
     m.bullets([
         "**DRIFT** → bounded, rate-limited, audited recalibration "
         "c_{i} ← clip(c_{i} + clip(γ b̂_{i}, ±δ), ±c_{max}), with b̂_{i} the robust "
-        "residual bias; data keep flowing. The drift state is sticky while the "
-        "correction is in force, because a residual held at zero by the correction is "
-        "evidence that the correction works, not that the sensor recovered.",
-        "**POISON** → quarantine: nothing is forwarded, every adaptive element is "
-        "frozen, a security alert is raised, and the channel is held for a minimum "
-        "period before it may recover.",
-        "**PROCESS** → forward and alarm; calibration is forbidden.",
+        "residual bias; data keep flowing. The channel stays in the drift state while "
+        "the correction is active: a residual kept at zero by the correction shows that "
+        "the correction is working, not that the sensor has healed.",
+        "**POISON** → quarantine. The node forwards nothing, freezes all adaptive "
+        "elements and raises a security alert, and the channel must wait out a minimum "
+        "hold before it can recover.",
+        "**PROCESS** → the data are forwarded with an alarm, and no calibration is "
+        "allowed.",
     ])
-    m.p("**Quarantine policy.** A quarantined channel is not released by a drift "
-        "verdict — otherwise an attacker could buy recalibration by steering one "
-        "verdict — and the node acts on the governor's standing state rather than on "
-        "the latest verdict, so a drift verdict on a quarantined channel never "
-        "forwards data. By default the quarantine is *latched*: the channel returns "
-        "only after the freeze hold and a clean run. We also evaluate an "
-        "availability-oriented alternative, *re-attribution*, in which a quarantined "
-        "channel moves to DRIFTING after the hold plus a sustained run of 200 "
-        "consecutive drift verdicts; Section 6.4 shows why latching is the safer "
+    m.p("**Quarantine policy.** A drift verdict cannot release a quarantined channel; "
+        "if it could, an attacker would only need to push one verdict towards drift to "
+        "get recalibrated. The node also follows the governor's current state, not the "
+        "most recent verdict, so a quarantined channel forwards nothing even when it is "
+        "labelled drift. Quarantine is *latched* by default, meaning the channel comes "
+        "back only after the freeze hold has passed and a clean run has been seen. We "
+        "also evaluate an availability-oriented alternative, *re-attribution*, in which "
+        "a quarantined channel moves to DRIFTING after the hold plus a sustained run of "
+        "200 consecutive drift verdicts; Section 6.4 shows why latching is the safer "
         "default.")
-    m.p("**Uncertain verdicts.** A verdict below the confidence threshold (0.62) is "
-        "escalated to a heavier back-end when one is configured. Without one, an "
-        "uncertain POISON verdict holds that sample — it is neither forwarded nor "
-        "admitted to any adaptive element — but it is recorded by the governor as "
-        "UNKNOWN and cannot latch a quarantine; only a confident POISON verdict does. "
-        "Uncertain DRIFT and PROCESS verdicts act locally, since their actions are "
-        "bounded and reversible. This realises the rule that no irreversible action is "
-        "taken on an ambiguous sample.")
+    m.p("**Uncertain verdicts (E6).** A verdict below the confidence threshold is "
+        "escalated to a heavier back-end when one is configured. Without one, as in "
+        "every experiment here, an uncertain POISON verdict holds that sample — it is "
+        "neither forwarded nor admitted to any adaptive element — but it is recorded by "
+        "the governor as UNKNOWN and cannot latch a quarantine; only a confident POISON "
+        "verdict does. Uncertain DRIFT and PROCESS verdicts act locally, since their "
+        "actions are bounded and reversible. The threshold therefore sets the boundary "
+        "between the reversible path (hold) and the irreversible one (latched "
+        "quarantine). Its value, 0.62, was fixed in the original prototype before any of "
+        "the held-out evaluations in this paper existed, and was not tuned on them; "
+        "Section 6.5 reports how every error rate moves when it is varied from 0.40 to "
+        "0.90.")
     m.h2("4.6 Cost")
     m.p("Per sample and channel, the nominal path is one model evaluation, a "
         "subtraction and a CUSUM update; features, localisation and classification run "
         "only on engaged channels, at a configurable re-evaluation interval (a fresh "
-        "trigger always forces re-evaluation). Section 6.7 reports measured latency.")
+        "trigger always forces re-evaluation). Section 6.8 reports measured latency and "
+        "memory.")
 
     # ================================================================ 5
     m.h1("5. Experimental design")
@@ -421,8 +541,9 @@ def methods(m, R):
         "and a process event (heater contactor welded on or failed open). Onset and rate "
         "are drawn per episode (onset in the second quarter of the episode; rate "
         "0.8–2.5 × 10^{−3} units per sample), and the event polarity — drift or ramp "
-        "direction, heater on or off — is balanced. Episodes are 4000 samples, of which "
-        "the first 600 are a scored-out warm-up.")
+        "direction, heater on or off — alternates with the seed, so that the bank is "
+        "exactly balanced. Episodes are 4000 samples, of which the first 600 are a "
+        "scored-out warm-up.")
     m.p("**Splits.** Models are trained on 6 seeds × 6 scenarios × 2 polarities "
         "(72 episodes, {n_corpus} labelled channel-samples) and evaluated on 30 "
         "disjoint seeds × 6 scenarios (180 episodes). Every reported number comes from "
@@ -442,15 +563,28 @@ def methods(m, R):
         "temperature by 1.5–4 °C and humidity exactly as psychrometrics requires at "
         "constant vapour pressure. Each mote uses its four nearest neighbours as "
         "physical references. **Motes are split at random into disjoint train and "
-        "test halves**; every model is fitted on train motes only. Clean test episodes "
-        "measure false alarms on unmodified real data.")
+        "test halves**, so that no mote's data contribute to both sides "
+        "{cite:tarish2026}; every model is fitted on train motes only. Clean test "
+        "episodes measure false alarms on unmodified real data. The injected events "
+        "come from the same generator family used for training, which favours the "
+        "data-driven baselines; we return to this in Section 7.4.")
     m.h2("5.3 Comparison systems")
     m.p("All learned baselines are trained on the same episodes with the same four "
         "labels and see at least the information PIRCAD sees — every raw channel plus "
-        "the actuator command or neighbour aggregates — but no physics (Table 3). "
-        "Self-calibrating baselines were tuned to minimise their own correction error "
-        "on benign drift (training seeds only), so that none can appear safe merely by "
-        "not adapting.")
+        "the actuator command or neighbour aggregates — but no physics (Table 3). The "
+        "CNN and the generic-feature forest use fixed architectures and "
+        "hyper-parameters chosen before evaluation and were not tuned further.")
+    m.p("**Tuning of the self-calibrating baselines.** Each was tuned, on training "
+        "seeds disjoint from every evaluation seed, to minimise its own correction "
+        "error on benign drift — its intended job — so that none can appear safe "
+        "merely by not adapting. The selected values are q_{b} = 0.02² for the Kalman "
+        "bias estimator's bias process noise, α = 0.002 with recalibration gain 0.3 for "
+        "the EWMA reference, and δ = 0.01, λ = 5 for Page-Hinkley. None was configured "
+        "for, or shown, the attack-then-fault scenario. Because that choice could "
+        "itself decide the outcome, Section 6.4 also sweeps each baseline's adaptation "
+        "parameter over a wide range (q_{b} from 0.0005² to 0.05², α from 0.0002 to "
+        "0.01, λ from 2.5 to 80) and reports the safety outcome and the drift-correction "
+        "error at every setting.")
     m.table(
         "Comparison systems.",
         ["System", "Type", "Input", "Output"],
@@ -479,11 +613,17 @@ def methods(m, R):
         "fraction of genuine process-event samples labelled as an instrument fault. "
         "Effect-level metrics measure what the system *does*: **poisoning containment** "
         "(poisoned samples not forwarded), **retraining protection** (1 − poisoned "
-        "samples admitted to any adaptive element / poisoned samples) and **forwarded "
-        "error** (mean absolute error between the forwarded, corrected value of the "
-        "target channel and its true physical value over the event window, with "
-        "withheld samples contributing zero). All metrics are computed per episode; we "
-        "report means with 95 % bootstrap confidence intervals (4000 resamples) and "
-        "compare systems with paired two-sided Wilcoxon signed-rank tests "
-        "{cite:wilcoxon1945} matched by episode, with Holm correction {cite:holm1979} "
-        "and rank-biserial effect sizes.")
+        "samples admitted to any adaptive element / poisoned samples), **forwarded "
+        "error** or harm (mean absolute error between the forwarded, corrected value of "
+        "the target channel and its true physical value over the event window, with "
+        "withheld samples contributing zero) and the **useful-data rate** (fraction of "
+        "event-window samples forwarded within 0.5 °C of the truth).")
+    m.p("All metrics are computed per episode. We report means with 95 % bootstrap "
+        "confidence intervals (4000 resamples) and compare systems with paired "
+        "two-sided Wilcoxon signed-rank tests {cite:wilcoxon1945} matched by episode "
+        "(or by seed, where the systems see the same seeds), with Holm correction "
+        "{cite:holm1979} within each table, and report the matched-pairs rank-biserial "
+        "correlation r as the effect size (positive when the first-named system "
+        "scores higher). Comparisons between disjoint groups of episodes (rising vs. "
+        "falling events) use the two-sided Mann–Whitney U test. Proportions of "
+        "episodes (alarm fired, spurious trip) are reported with bootstrap CIs.")
