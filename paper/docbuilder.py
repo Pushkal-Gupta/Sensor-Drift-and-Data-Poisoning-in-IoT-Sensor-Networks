@@ -23,13 +23,13 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor  # noqa: F401
-from docx.enum.text import WD_TAB_ALIGNMENT
+from docx.enum.text import WD_COLOR_INDEX, WD_TAB_ALIGNMENT
 
 TEMPLATE = Path(__file__).resolve().parent / "template.docx"
 TNR = "Times New Roman"
 
 CITE = re.compile(r"\{cite:([^}]+)\}")
-FMT = re.compile(r"(\*\*[^*]+\*\*|\*[^*]+\*|_\{[^}]+\}|\^\{[^}]+\})")
+FMT = re.compile(r"(\[\[[^\]]+\]\]|\*\*[^*]+\*\*|\*[^*]+\*|_\{[^}]+\}|\^\{[^}]+\})")
 
 
 class Manuscript:
@@ -88,7 +88,11 @@ class Manuscript:
         for part in FMT.split(text):
             if not part:
                 continue
-            if part.startswith("**"):
+            if part.startswith("[["):
+                # text the authors must confirm: highlighted so it cannot slip through
+                r = p.add_run(part[2:-2])
+                r.font.highlight_color = WD_COLOR_INDEX.YELLOW
+            elif part.startswith("**"):
                 r = p.add_run(part[2:-2]); r.bold = True
             elif part.startswith("*") and part.endswith("*") and len(part) > 2:
                 r = p.add_run(part[1:-1]); r.italic = True
@@ -160,11 +164,12 @@ class Manuscript:
 
     def table(self, caption: str, header: Sequence[str], rows: Sequence[Sequence[str]],
               note: Optional[str] = None, widths: Optional[Sequence[float]] = None,
-              font: float = 9) -> int:
-        self.n_tab += 1
+              font: float = 9, label: Optional[str] = None) -> int:
+        if label is None:
+            self.n_tab += 1
         c = self._fmt(self.doc.add_paragraph(), before=6, after=5, single=True,
                       align=WD_ALIGN_PARAGRAPH.CENTER, keep_next=True)
-        r = c.add_run(f"Table {self.n_tab}."); r.bold = True; r.font.size = Pt(9.5)
+        r = c.add_run(f"Table {label or self.n_tab}."); r.bold = True; r.font.size = Pt(9.5)
         self._runs(c, " " + caption, size=9.5)
         ncol = len(header)
         t = self.doc.add_table(rows=1 + len(rows), cols=ncol)

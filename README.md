@@ -83,6 +83,34 @@ python tests/test_v2.py                   # tests for the journal additions
 | `exp12_hybrid_features.py` | physics features plus generic features in one learner |
 | `exp13_intel_shift.py` | the noise-shift test, repeated on real data |
 
+### First-round revision (Array, experiments 14–17)
+
+Run after experiments 6–13 (they reuse the fitted models in `artifacts/`):
+
+```bash
+python experiments/exp14_revision.py all        # threshold, safety variants, dose-response, reference error
+python experiments/exp14_revision.py baselines  # self-calibrating baselines under A0/A2/A4/A5
+python experiments/exp15_posthoc.py             # CIs, paired tests, polarity breakdown (no re-runs)
+python experiments/exp16_cost.py                # latency, throughput, memory (run on an idle machine)
+python experiments/exp17_noise_augmentation.py  # noise-augmented training as a mitigation
+python paper/make_architecture.py && python paper/make_revision_figures.py
+python paper/build_manuscript.py && python paper/build_response.py
+```
+
+| Script | Question |
+|---|---|
+| `exp14_revision.py threshold` | how do the error rates move with the confidence threshold (0.40–0.90), simulated and Intel? |
+| `exp14_revision.py safety` | does the safety alarm survive for each ablated variant, and under the on-path (A4) and coordinated (A5) attackers? |
+| `exp14_revision.py dose` | baselines swept over their adaptation parameter; attack duration; alarm threshold |
+| `exp14_revision.py reference` | error of the leave-one-out reference on clean simulated and real data (Proposition 2) |
+| `exp15_posthoc.py` | per-polarity breakdown; tests for the attacker sweep, shift table and Intel noise shift |
+| `exp16_cost.py` | per-frame latency distribution, frames/s, forest size, baseline cost on the same machine |
+| `exp17_noise_augmentation.py` | does training at several noise levels remove the noise-shift weakness? |
+
+`tests/test_v2.py` now has a regression test for each of the three defects in
+Section 7.3 of the paper (polarity balance, containment follows the governor,
+uncertain poisoning verdicts never latch quarantine).
+
 New modules: `pircad/scenarios.py` (attacker and shift knobs), `pircad/indoor.py`
 (real-data twin and constraints), `pircad/baselines_ml.py`,
 `pircad/baselines_adaptive.py`, `pircad/fastforest.py`.
